@@ -4,16 +4,15 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert,
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '@/styles/commonStyles';
-import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, BASE_CAKE_PRICE, PRICE_PER_100G, GRAMS_PER_PERSON } from '@/types/order';
+import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, GRAMS_PER_PERSON } from '@/types/order';
 import OptionSelector from '@/components/OptionSelector';
-import CakePreview from '@/components/CakePreview';
 import { IconSymbol } from '@/components/IconSymbol';
-import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG } from '@/config/appConfig';
+import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
 import { useOrder } from '@/contexts/OrderContext';
 
 export default function CustomizeCakeScreen() {
   const router = useRouter();
-  const { cakeConfig, updateCakeConfig } = useOrder();
+  const { cakeConfig, updateCakeConfig, getCakePrice } = useOrder();
   
   const [config, setConfig] = useState<CakeConfiguration>(cakeConfig);
 
@@ -51,20 +50,6 @@ export default function CustomizeCakeScreen() {
     }
   };
 
-  const calculatePrice = () => {
-    // Calcolo base: peso totale * prezzo al kg
-    const totalWeightKg = (config.numberOfPeople * GRAMS_PER_PERSON) / 1000;
-    let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
-    
-    // Aggiungi costo finitura se presente
-    const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura);
-    if (finituraOption && finituraOption.price > 0) {
-      totalPrice += finituraOption.price;
-    }
-    
-    return totalPrice;
-  };
-
   const canProceed = config.base && config.cream && config.numberOfPeople > 0;
 
   const handleContinue = () => {
@@ -77,11 +62,113 @@ export default function CustomizeCakeScreen() {
     }
     
     console.log('Cake configuration:', config);
-    console.log('Cake price:', calculatePrice());
+    console.log('Cake price:', getCakePrice());
     router.push({
       pathname: '/(tabs)/(home)/products',
       params: { cakeConfigured: 'true' }
     });
+  };
+
+  const renderSummary = () => {
+    if (!config.base && !config.cream) return null;
+
+    const totalWeightKg = (config.numberOfPeople * GRAMS_PER_PERSON) / 1000;
+    const basePrice = totalWeightKg * CAKE_PRICING.pricePerKg;
+    
+    const variegaturaOption = CAKE_VARIEGATURA_CONFIG.find(v => v.value === config.variegatura);
+    const variegaturaPrice = variegaturaOption?.price || 0;
+    
+    const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura);
+    const finituraPrice = finituraOption?.price || 0;
+    
+    const lactoseFreeOption = CAKE_LACTOSE_FREE_CONFIG.find(l => l.value === config.lactoseFree);
+    const lactoseFreePrice = lactoseFreeOption?.price || 0;
+
+    return (
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>{UI_TEXTS.customizeCake.preview}</Text>
+        
+        {config.base && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Base:</Text>
+            <Text style={styles.summaryValue}>
+              {CAKE_BASES.find(b => b.value === config.base)?.label}
+            </Text>
+          </View>
+        )}
+        
+        {config.cream && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Crema:</Text>
+            <Text style={styles.summaryValue}>
+              {CAKE_CREAMS.find(c => c.value === config.cream)?.label}
+            </Text>
+          </View>
+        )}
+        
+        {config.variegatura !== 'nessuna' && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Variegatura:</Text>
+            <Text style={styles.summaryValue}>
+              {CAKE_VARIEGATURA_CONFIG.find(v => v.value === config.variegatura)?.label}
+              {variegaturaPrice > 0 && ` (+€${variegaturaPrice.toFixed(2)})`}
+            </Text>
+          </View>
+        )}
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Finitura:</Text>
+          <Text style={styles.summaryValue}>
+            {finituraOption?.label}
+            {finituraPrice > 0 && ` (+€${finituraPrice.toFixed(2)})`}
+          </Text>
+        </View>
+        
+        {config.lactoseFree === 'senza_lattosio' && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Senza Lattosio:</Text>
+            <Text style={styles.summaryValue}>
+              Sì (+€{lactoseFreePrice.toFixed(2)})
+            </Text>
+          </View>
+        )}
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Persone:</Text>
+          <Text style={styles.summaryValue}>
+            {config.numberOfPeople} ({totalWeightKg.toFixed(2)}kg)
+          </Text>
+        </View>
+        
+        {config.dedication && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Dedica:</Text>
+            <Text style={styles.summaryValue}>&quot;{config.dedication}&quot;</Text>
+          </View>
+        )}
+        
+        {config.photoUri && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Foto:</Text>
+            <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+          </View>
+        )}
+        
+        <View style={styles.summaryDivider} />
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryTotalLabel}>Totale:</Text>
+          <Text style={styles.summaryTotalValue}>€{getCakePrice().toFixed(2)}</Text>
+        </View>
+        
+        <Text style={styles.priceBreakdown}>
+          Base: €{basePrice.toFixed(2)}
+          {variegaturaPrice > 0 && ` + Variegatura: €${variegaturaPrice.toFixed(2)}`}
+          {finituraPrice > 0 && ` + Finitura: €${finituraPrice.toFixed(2)}`}
+          {lactoseFreePrice > 0 && ` + Senza Lattosio: €${lactoseFreePrice.toFixed(2)}`}
+        </Text>
+      </View>
+    );
   };
 
   return (
@@ -178,6 +265,30 @@ export default function CustomizeCakeScreen() {
           ))}
         </View>
 
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseLactoseFree}</Text>
+        <View style={styles.optionsGrid}>
+          {CAKE_LACTOSE_FREE_CONFIG.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.optionCard,
+                config.lactoseFree === option.value && styles.optionCardSelected
+              ]}
+              onPress={() => updateConfig({ lactoseFree: option.value as any })}
+            >
+              <Text style={[
+                styles.optionLabel,
+                config.lactoseFree === option.value && styles.optionLabelSelected
+              ]}>
+                {option.label}
+              </Text>
+              {option.price > 0 && (
+                <Text style={styles.optionPrice}>+€{option.price.toFixed(2)}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.numberOfPeople}</Text>
         <View style={styles.peopleSelector}>
           <TouchableOpacity
@@ -226,21 +337,7 @@ export default function CustomizeCakeScreen() {
           </Text>
         </TouchableOpacity>
 
-        {(config.base || config.cream) && (
-          <View style={styles.previewSection}>
-            <CakePreview config={config} />
-          </View>
-        )}
-
-        <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>{UI_TEXTS.customizeCake.priceLabel}</Text>
-          <Text style={styles.priceValue}>€{calculatePrice().toFixed(2)}</Text>
-          <Text style={styles.priceBreakdown}>
-            {((config.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg × €{CAKE_PRICING.pricePerKg}/kg
-            {CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura)?.price ? 
-              ` + €${CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura)?.price} (finitura)` : ''}
-          </Text>
-        </View>
+        {renderSummary()}
 
         <TouchableOpacity
           style={[styles.continueButton, !canProceed && styles.continueButtonDisabled]}
@@ -430,34 +527,56 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
-  previewSection: {
-    marginVertical: 20,
-  },
-  priceCard: {
-    backgroundColor: colors.primary,
+  summaryCard: {
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
     marginVertical: 20,
-    boxShadow: '0px 4px 12px rgba(233, 30, 99, 0.3)',
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
     elevation: 4,
   },
-  priceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 8,
+  summaryTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
   },
-  priceValue: {
-    fontSize: 32,
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  summaryLabel: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  summaryValue: {
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+    textAlign: 'right',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: colors.highlight,
+    marginVertical: 12,
+  },
+  summaryTotalLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  summaryTotalValue: {
+    fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.primary,
   },
   priceBreakdown: {
-    fontSize: 13,
-    color: '#FFFFFF',
+    fontSize: 12,
+    color: colors.textSecondary,
     marginTop: 8,
-    opacity: 0.9,
+    textAlign: 'center',
   },
   continueButton: {
     backgroundColor: colors.secondary,

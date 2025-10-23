@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -39,7 +39,6 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
           )}
-          <Text style={styles.emoji}>{PASTRY_INFO.emoji}</Text>
           <Text style={styles.title}>{PASTRY_INFO.welcomeTitle}</Text>
           <Text style={styles.subtitle}>
             {PASTRY_INFO.welcomeSubtitle}
@@ -90,10 +89,13 @@ export default function HomeScreen() {
 
         <View style={styles.contactCard}>
           <Text style={styles.contactTitle}>Contattaci</Text>
-          <View style={styles.contactRow}>
+          <TouchableOpacity 
+            style={styles.contactRow}
+            onPress={() => Linking.openURL(`tel:${PASTRY_INFO.phone}`)}
+          >
             <IconSymbol name="phone" size={20} color={colors.primary} />
             <Text style={styles.contactText}>{PASTRY_INFO.phone}</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.contactRow}>
             <IconSymbol name="envelope" size={20} color={colors.primary} />
             <Text style={styles.contactText}>{PASTRY_INFO.email}</Text>
@@ -131,10 +133,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderColor: colors.primary,
-  },
-  emoji: {
-    fontSize: 60,
-    marginBottom: 16,
   },
   title: {
     fontSize: 28,

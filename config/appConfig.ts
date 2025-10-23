@@ -24,7 +24,7 @@ export const PASTRY_INFO = {
   welcomeSubtitle: 'Crea il tuo dolce personalizzato o scegli dai nostri prodotti',
   
   // Informazioni di contatto
-  phone: '+39 049 640066',
+  phone: '3479200940',
   email: 'info@pasticceriaduemondi.it',
   address: 'Via Mattei 20, Maserà di Padova (PD)',
   
@@ -158,19 +158,19 @@ export const CAKE_VARIEGATURA_CONFIG = [
     value: 'cioccolato',
     label: 'Cioccolato',
     description: 'Crema spalmabile al cioccolato',
-    price: 0,
+    price: 3,
   },
   {
     value: 'cioccolato_bianco',
     label: 'Cioccolato Bianco',
     description: 'Crema spalmabile al cioccolato bianco',
-    price: 0,
+    price: 3,
   },
   {
     value: 'pistacchio',
     label: 'Pistacchio',
     description: 'Crema spalmabile al pistacchio',
-    price: 0,
+    price: 3,
   },
 ];
 
@@ -188,50 +188,50 @@ export const CAKE_FINITURA_CONFIG = [
   {
     value: 'panna_rosa',
     label: 'Panna Colorata - Rosa',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#FFB6C1',
   },
   {
     value: 'panna_gialla',
     label: 'Panna Colorata - Gialla',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#FFD700',
   },
   {
     value: 'panna_verde',
     label: 'Panna Colorata - Verde',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#90EE90',
   },
   {
     value: 'panna_azzurra',
     label: 'Panna Colorata - Azzurra',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#87CEEB',
   },
   {
     value: 'panna_lilla',
     label: 'Panna Colorata - Lilla',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#DDA0DD',
   },
   {
     value: 'panna_arancione',
     label: 'Panna Colorata - Arancione',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#FFA500',
   },
   {
     value: 'panna_viola',
     label: 'Panna Colorata - Viola',
-    description: 'Compreso nel prezzo',
-    price: 0,
+    description: '+3€',
+    price: 3,
     color: '#9370DB',
   },
   {
@@ -240,6 +240,24 @@ export const CAKE_FINITURA_CONFIG = [
     description: '+3€',
     price: 3,
     color: '#8B4513',
+  },
+];
+
+// ============================================
+// OPZIONI DOLCI - SENZA LATTOSIO
+// ============================================
+export const CAKE_LACTOSE_FREE_CONFIG = [
+  {
+    value: 'con_lattosio',
+    label: 'Con Lattosio',
+    description: 'Normale',
+    price: 0,
+  },
+  {
+    value: 'senza_lattosio',
+    label: 'Senza Lattosio',
+    description: '+10€',
+    price: 10,
   },
 ];
 
@@ -267,20 +285,21 @@ export const UI_TEXTS = {
     chooseCream: 'Scegli la Crema',
     chooseVariegatura: 'Variegatura con Creme Spalmabili',
     chooseFinitura: 'Finitura',
+    chooseLactoseFree: 'Opzione Senza Lattosio',
     numberOfPeople: 'Numero di Persone',
     dedication: 'Dedica sul Dolce',
     dedicationPlaceholder: 'Es: Buon Compleanno Maria!',
     photo: 'Foto sul Dolce (Opzionale)',
     addPhoto: 'Aggiungi Foto',
     changePhoto: 'Cambia Foto',
-    preview: 'Anteprima Dolce',
+    preview: 'Riepilogo Dolce',
     priceLabel: 'Prezzo Dolce Personalizzato',
     continueButton: 'Continua con Altri Prodotti',
   },
   
   products: {
     title: 'Altri Prodotti',
-    subtitle: 'Completa il tuo ordine con i nostri dolci artigianali',
+    subtitle: 'Completa il tuo ordine con i nostri prodotti',
     summaryTitle: 'Riepilogo Prodotti Aggiuntivi',
     totalLabel: 'Totale Prodotti',
     checkoutButton: 'Vai al Pagamento',
@@ -388,6 +407,7 @@ export default {
   CAKE_CREAMS_CONFIG,
   CAKE_VARIEGATURA_CONFIG,
   CAKE_FINITURA_CONFIG,
+  CAKE_LACTOSE_FREE_CONFIG,
   UI_TEXTS,
   THEME_COLORS,
   DEDICATION_CONFIG,

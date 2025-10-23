@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { CakeConfiguration, OrderItem, Product } from '@/types/order';
-import { CAKE_PRICING, CAKE_FINITURA_CONFIG } from '@/config/appConfig';
+import { CAKE_PRICING, CAKE_FINITURA_CONFIG, CAKE_VARIEGATURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
 
 interface OrderContextType {
   cakeConfig: CakeConfiguration;
@@ -26,6 +26,7 @@ const initialCakeConfig: CakeConfiguration = {
   cream: null,
   variegatura: 'nessuna',
   finitura: 'panna_normale',
+  lactoseFree: 'con_lattosio',
   numberOfPeople: CAKE_PRICING.defaultPeople,
   dedication: '',
   photoUri: null,
@@ -93,10 +94,22 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const totalWeightKg = (cakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson) / 1000;
     let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
     
+    // Aggiungi costo variegatura se presente
+    const variegaturaOption = CAKE_VARIEGATURA_CONFIG.find(v => v.value === cakeConfig.variegatura);
+    if (variegaturaOption && variegaturaOption.price > 0) {
+      totalPrice += variegaturaOption.price;
+    }
+    
     // Aggiungi costo finitura se presente
     const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === cakeConfig.finitura);
     if (finituraOption && finituraOption.price > 0) {
       totalPrice += finituraOption.price;
+    }
+    
+    // Aggiungi costo senza lattosio se presente
+    const lactoseFreeOption = CAKE_LACTOSE_FREE_CONFIG.find(l => l.value === cakeConfig.lactoseFree);
+    if (lactoseFreeOption && lactoseFreeOption.price > 0) {
+      totalPrice += lactoseFreeOption.price;
     }
     
     return totalPrice;

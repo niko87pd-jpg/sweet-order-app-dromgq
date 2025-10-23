@@ -1,61 +1,29 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { ADDITIONAL_PRODUCTS } from '@/data/products';
-import { OrderItem } from '@/types/order';
 import ProductCard from '@/components/ProductCard';
 import { IconSymbol } from '@/components/IconSymbol';
 import { UI_TEXTS } from '@/config/appConfig';
+import { useOrder } from '@/contexts/OrderContext';
 
 export default function ProductsScreen() {
   const router = useRouter();
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const { orderItems, addProduct, removeProduct, getProductQuantity, getProductsTotal } = useOrder();
 
-  const getProductQuantity = (productId: string) => {
-    return orderItems.find(item => item.product.id === productId)?.quantity || 0;
-  };
-
-  const addProduct = (productId: string) => {
+  const handleAddProduct = (productId: string) => {
     const product = ADDITIONAL_PRODUCTS.find(p => p.id === productId);
     if (!product) {
       console.log('Product not found:', productId);
       return;
     }
-
-    setOrderItems(prev => {
-      const existing = prev.find(item => item.product.id === productId);
-      if (existing) {
-        return prev.map(item =>
-          item.product.id === productId
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
-    });
+    addProduct(product);
   };
 
-  const removeProduct = (productId: string) => {
-    setOrderItems(prev => {
-      const existing = prev.find(item => item.product.id === productId);
-      if (!existing) return prev;
-
-      if (existing.quantity === 1) {
-        return prev.filter(item => item.product.id !== productId);
-      }
-
-      return prev.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      );
-    });
-  };
-
-  const calculateTotal = () => {
-    return orderItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const handleRemoveProduct = (productId: string) => {
+    removeProduct(productId);
   };
 
   const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -90,8 +58,8 @@ export default function ProductsScreen() {
               key={product.id}
               product={product}
               quantity={getProductQuantity(product.id)}
-              onAdd={() => addProduct(product.id)}
-              onRemove={() => removeProduct(product.id)}
+              onAdd={() => handleAddProduct(product.id)}
+              onRemove={() => handleRemoveProduct(product.id)}
             />
           ))}
 
@@ -111,7 +79,7 @@ export default function ProductsScreen() {
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryTotalLabel}>{UI_TEXTS.products.totalLabel}</Text>
-                <Text style={styles.summaryTotalValue}>€{calculateTotal().toFixed(2)}</Text>
+                <Text style={styles.summaryTotalValue}>€{getProductsTotal().toFixed(2)}</Text>
               </View>
             </View>
           )}
@@ -124,7 +92,7 @@ export default function ProductsScreen() {
             <View style={styles.bottomBarContent}>
               <View>
                 <Text style={styles.bottomBarLabel}>{totalItems} prodotti</Text>
-                <Text style={styles.bottomBarPrice}>€{calculateTotal().toFixed(2)}</Text>
+                <Text style={styles.bottomBarPrice}>€{getProductsTotal().toFixed(2)}</Text>
               </View>
               <TouchableOpacity
                 style={styles.checkoutButton}

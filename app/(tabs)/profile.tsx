@@ -54,7 +54,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contatti</Text>
+          <Text style={styles.sectionTitle}>Contattaci</Text>
           
           <TouchableOpacity style={styles.contactCard} onPress={handleCall}>
             <View style={styles.iconContainer}>
