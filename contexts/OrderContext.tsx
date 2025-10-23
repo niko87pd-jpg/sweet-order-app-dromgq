@@ -1,28 +1,21 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { CakeConfiguration, OrderItem, Product } from '@/types/order';
-import { CAKE_PRICING } from '@/config/appConfig';
+import { CAKE_PRICING, CAKE_FINITURA_CONFIG } from '@/config/appConfig';
 
 interface OrderContextType {
-  // Cake configuration
   cakeConfig: CakeConfiguration;
   updateCakeConfig: (updates: Partial<CakeConfiguration>) => void;
   resetCakeConfig: () => void;
-  
-  // Additional products
   orderItems: OrderItem[];
   addProduct: (product: Product) => void;
   removeProduct: (productId: string) => void;
   getProductQuantity: (productId: string) => number;
   clearProducts: () => void;
-  
-  // Calculations
   getCakePrice: () => number;
   getProductsTotal: () => number;
   getOrderTotal: () => number;
   getDepositAmount: () => number;
-  
-  // Order management
   clearOrder: () => void;
 }
 
@@ -31,10 +24,20 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 const initialCakeConfig: CakeConfiguration = {
   base: null,
   cream: null,
+  variegatura: 'nessuna',
+  finitura: 'panna_normale',
   numberOfPeople: CAKE_PRICING.defaultPeople,
   dedication: '',
   photoUri: null,
 };
+
+export function useOrder() {
+  const context = useContext(OrderContext);
+  if (!context) {
+    throw new Error('useOrder must be used within an OrderProvider');
+  }
+  return context;
+}
 
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [cakeConfig, setCakeConfig] = useState<CakeConfiguration>(initialCakeConfig);
@@ -50,8 +53,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const addProduct = (product: Product) => {
     setOrderItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
-      if (existing) {
+      const existingItem = prev.find(item => item.product.id === product.id);
+      if (existingItem) {
         return prev.map(item =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -64,46 +67,52 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const removeProduct = (productId: string) => {
     setOrderItems(prev => {
-      const existing = prev.find(item => item.product.id === productId);
-      if (!existing) return prev;
-
-      if (existing.quantity === 1) {
-        return prev.filter(item => item.product.id !== productId);
+      const existingItem = prev.find(item => item.product.id === productId);
+      if (existingItem && existingItem.quantity > 1) {
+        return prev.map(item =>
+          item.product.id === productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
       }
-
-      return prev.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      );
+      return prev.filter(item => item.product.id !== productId);
     });
   };
 
-  const getProductQuantity = (productId: string) => {
-    return orderItems.find(item => item.product.id === productId)?.quantity || 0;
+  const getProductQuantity = (productId: string): number => {
+    const item = orderItems.find(item => item.product.id === productId);
+    return item ? item.quantity : 0;
   };
 
   const clearProducts = () => {
     setOrderItems([]);
   };
 
-  const getCakePrice = () => {
-    if (!cakeConfig.base || !cakeConfig.cream) return 0;
+  const getCakePrice = (): number => {
+    // Calcolo base: peso totale * prezzo al kg
+    const totalWeightKg = (cakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson) / 1000;
+    let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
     
-    const totalWeight = cakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson;
-    const weightPrice = (totalWeight / 100) * CAKE_PRICING.pricePerHundredGrams;
-    return CAKE_PRICING.basePrice + weightPrice;
+    // Aggiungi costo finitura se presente
+    const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === cakeConfig.finitura);
+    if (finituraOption && finituraOption.price > 0) {
+      totalPrice += finituraOption.price;
+    }
+    
+    return totalPrice;
   };
 
-  const getProductsTotal = () => {
-    return orderItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const getProductsTotal = (): number => {
+    return orderItems.reduce((total, item) => {
+      return total + (item.product.price * item.quantity);
+    }, 0);
   };
 
-  const getOrderTotal = () => {
+  const getOrderTotal = (): number => {
     return getCakePrice() + getProductsTotal();
   };
 
-  const getDepositAmount = () => {
+  const getDepositAmount = (): number => {
     return getOrderTotal() * 0.5; // 50% deposit
   };
 
@@ -112,29 +121,25 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     clearProducts();
   };
 
-  const value: OrderContextType = {
-    cakeConfig,
-    updateCakeConfig,
-    resetCakeConfig,
-    orderItems,
-    addProduct,
-    removeProduct,
-    getProductQuantity,
-    clearProducts,
-    getCakePrice,
-    getProductsTotal,
-    getOrderTotal,
-    getDepositAmount,
-    clearOrder,
-  };
-
-  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
-}
-
-export function useOrder() {
-  const context = useContext(OrderContext);
-  if (context === undefined) {
-    throw new Error('useOrder must be used within an OrderProvider');
-  }
-  return context;
+  return (
+    <OrderContext.Provider
+      value={{
+        cakeConfig,
+        updateCakeConfig,
+        resetCakeConfig,
+        orderItems,
+        addProduct,
+        removeProduct,
+        getProductQuantity,
+        clearProducts,
+        getCakePrice,
+        getProductsTotal,
+        getOrderTotal,
+        getDepositAmount,
+        clearOrder,
+      }}
+    >
+      {children}
+    </OrderContext.Provider>
+  );
 }

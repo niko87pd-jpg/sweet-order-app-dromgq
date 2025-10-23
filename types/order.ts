@@ -1,10 +1,14 @@
 
 export type CakeBase = 'pasta_sfoglia' | 'pasta_frolla' | 'meringa' | 'pan_di_spagna';
 export type CakeCream = 'chantilly' | 'cioccolato' | 'pistacchio' | 'nocciola';
+export type CakeVariegatura = 'nessuna' | 'cioccolato' | 'cioccolato_bianco' | 'pistacchio';
+export type CakeFinitura = 'panna_normale' | 'panna_rosa' | 'panna_gialla' | 'panna_verde' | 'panna_azzurra' | 'panna_lilla' | 'panna_arancione' | 'panna_viola' | 'panna_cioccolato';
 
 export interface CakeConfiguration {
   base: CakeBase | null;
   cream: CakeCream | null;
+  variegatura: CakeVariegatura;
+  finitura: CakeFinitura;
   numberOfPeople: number;
   dedication: string;
   photoUri: string | null;

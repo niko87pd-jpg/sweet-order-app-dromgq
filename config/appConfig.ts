@@ -11,7 +11,7 @@
 // ============================================
 export const PASTRY_INFO = {
   // Nome della tua pasticceria (apparirà nell'header)
-  name: 'Pasticceria Dolce Vita',
+  name: 'Pasticceria Due Mondi',
   
   // Emoji o icona principale (apparirà nella home)
   emoji: '🧁',
@@ -24,15 +24,15 @@ export const PASTRY_INFO = {
   welcomeSubtitle: 'Crea il tuo dolce personalizzato o scegli dai nostri prodotti',
   
   // Informazioni di contatto
-  phone: '+39 123 456 7890',
-  email: 'info@pasticceriadolcevita.it',
-  address: 'Via Roma 123, 00100 Roma',
+  phone: '+39 049 640066',
+  email: 'info@pasticceriaduemondi.it',
+  address: 'Via Mattei 20, Maserà di Padova (PD)',
   
   // Orari di apertura
   openingHours: {
-    weekdays: '8:00 - 20:00',
-    saturday: '8:00 - 21:00',
-    sunday: '9:00 - 13:00',
+    weekdays: '7:00 - 13:00 / 15:30 - 19:30',
+    saturday: '7:00 - 13:00 / 15:30 - 19:30',
+    sunday: '7:00 - 13:00',
   },
 };
 
@@ -41,10 +41,13 @@ export const PASTRY_INFO = {
 // ============================================
 export const CAKE_PRICING = {
   // Prezzo base del dolce (€)
-  basePrice: 25,
+  basePrice: 0,
   
-  // Prezzo per 100g (€)
-  pricePerHundredGrams: 3.5,
+  // Prezzo per kg (€)
+  pricePerKg: 25,
+  
+  // Prezzo per 100g (€) - calcolato automaticamente da pricePerKg
+  pricePerHundredGrams: 2.5,
   
   // Grammi per persona (standard: 140g)
   gramsPerPerson: 140,
@@ -89,7 +92,6 @@ export const CAKE_BASES_CONFIG = [
     value: 'pasta_sfoglia',
     label: 'Pasta Sfoglia',
     description: 'Croccante e leggera',
-    // Puoi aggiungere un'immagine personalizzata qui
     imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
   },
   {
@@ -143,6 +145,105 @@ export const CAKE_CREAMS_CONFIG = [
 ];
 
 // ============================================
+// OPZIONI DOLCI - VARIEGATURA CON CREME SPALMABILI
+// ============================================
+export const CAKE_VARIEGATURA_CONFIG = [
+  {
+    value: 'nessuna',
+    label: 'Nessuna Variegatura',
+    description: 'Senza variegatura',
+    price: 0,
+  },
+  {
+    value: 'cioccolato',
+    label: 'Cioccolato',
+    description: 'Crema spalmabile al cioccolato',
+    price: 0,
+  },
+  {
+    value: 'cioccolato_bianco',
+    label: 'Cioccolato Bianco',
+    description: 'Crema spalmabile al cioccolato bianco',
+    price: 0,
+  },
+  {
+    value: 'pistacchio',
+    label: 'Pistacchio',
+    description: 'Crema spalmabile al pistacchio',
+    price: 0,
+  },
+];
+
+// ============================================
+// OPZIONI DOLCI - FINITURA
+// ============================================
+export const CAKE_FINITURA_CONFIG = [
+  {
+    value: 'panna_normale',
+    label: 'Panna Normale',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: null,
+  },
+  {
+    value: 'panna_rosa',
+    label: 'Panna Colorata - Rosa',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#FFB6C1',
+  },
+  {
+    value: 'panna_gialla',
+    label: 'Panna Colorata - Gialla',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#FFD700',
+  },
+  {
+    value: 'panna_verde',
+    label: 'Panna Colorata - Verde',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#90EE90',
+  },
+  {
+    value: 'panna_azzurra',
+    label: 'Panna Colorata - Azzurra',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#87CEEB',
+  },
+  {
+    value: 'panna_lilla',
+    label: 'Panna Colorata - Lilla',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#DDA0DD',
+  },
+  {
+    value: 'panna_arancione',
+    label: 'Panna Colorata - Arancione',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#FFA500',
+  },
+  {
+    value: 'panna_viola',
+    label: 'Panna Colorata - Viola',
+    description: 'Compreso nel prezzo',
+    price: 0,
+    color: '#9370DB',
+  },
+  {
+    value: 'panna_cioccolato',
+    label: 'Panna al Cioccolato',
+    description: '+3€',
+    price: 3,
+    color: '#8B4513',
+  },
+];
+
+// ============================================
 // TESTI INTERFACCIA
 // ============================================
 export const UI_TEXTS = {
@@ -164,6 +265,8 @@ export const UI_TEXTS = {
     title: 'Personalizza il Tuo Dolce',
     chooseBase: 'Scegli la Base',
     chooseCream: 'Scegli la Crema',
+    chooseVariegatura: 'Variegatura con Creme Spalmabili',
+    chooseFinitura: 'Finitura',
     numberOfPeople: 'Numero di Persone',
     dedication: 'Dedica sul Dolce',
     dedicationPlaceholder: 'Es: Buon Compleanno Maria!',
@@ -283,6 +386,8 @@ export default {
   PAYMENT_CONFIG,
   CAKE_BASES_CONFIG,
   CAKE_CREAMS_CONFIG,
+  CAKE_VARIEGATURA_CONFIG,
+  CAKE_FINITURA_CONFIG,
   UI_TEXTS,
   THEME_COLORS,
   DEDICATION_CONFIG,

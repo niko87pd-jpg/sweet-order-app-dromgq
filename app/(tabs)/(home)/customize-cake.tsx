@@ -8,20 +8,19 @@ import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, BASE_CAKE_PRICE, PRICE_PER_
 import OptionSelector from '@/components/OptionSelector';
 import CakePreview from '@/components/CakePreview';
 import { IconSymbol } from '@/components/IconSymbol';
-import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING } from '@/config/appConfig';
+import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG } from '@/config/appConfig';
+import { useOrder } from '@/contexts/OrderContext';
 
 export default function CustomizeCakeScreen() {
   const router = useRouter();
-  const [config, setConfig] = useState<CakeConfiguration>({
-    base: null,
-    cream: null,
-    numberOfPeople: CAKE_PRICING.defaultPeople,
-    dedication: '',
-    photoUri: null,
-  });
+  const { cakeConfig, updateCakeConfig } = useOrder();
+  
+  const [config, setConfig] = useState<CakeConfiguration>(cakeConfig);
 
   const updateConfig = (updates: Partial<CakeConfiguration>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+    updateCakeConfig(updates);
   };
 
   const pickImage = async () => {
@@ -53,9 +52,17 @@ export default function CustomizeCakeScreen() {
   };
 
   const calculatePrice = () => {
-    const totalWeight = config.numberOfPeople * GRAMS_PER_PERSON;
-    const weightPrice = (totalWeight / 100) * PRICE_PER_100G;
-    return BASE_CAKE_PRICE + weightPrice;
+    // Calcolo base: peso totale * prezzo al kg
+    const totalWeightKg = (config.numberOfPeople * GRAMS_PER_PERSON) / 1000;
+    let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
+    
+    // Aggiungi costo finitura se presente
+    const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura);
+    if (finituraOption && finituraOption.price > 0) {
+      totalPrice += finituraOption.price;
+    }
+    
+    return totalPrice;
   };
 
   const canProceed = config.base && config.cream && config.numberOfPeople > 0;
@@ -70,6 +77,7 @@ export default function CustomizeCakeScreen() {
     }
     
     console.log('Cake configuration:', config);
+    console.log('Cake price:', calculatePrice());
     router.push({
       pathname: '/(tabs)/(home)/products',
       params: { cakeConfigured: 'true' }
@@ -111,6 +119,65 @@ export default function CustomizeCakeScreen() {
           onSelect={(value) => updateConfig({ cream: value as any })}
         />
 
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseVariegatura}</Text>
+        <View style={styles.optionsGrid}>
+          {CAKE_VARIEGATURA_CONFIG.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.optionCard,
+                config.variegatura === option.value && styles.optionCardSelected
+              ]}
+              onPress={() => updateConfig({ variegatura: option.value as any })}
+            >
+              <Text style={[
+                styles.optionLabel,
+                config.variegatura === option.value && styles.optionLabelSelected
+              ]}>
+                {option.label}
+              </Text>
+              {option.price > 0 && (
+                <Text style={styles.optionPrice}>+€{option.price.toFixed(2)}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseFinitura}</Text>
+        <View style={styles.optionsGrid}>
+          {CAKE_FINITURA_CONFIG.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.finituraCard,
+                config.finitura === option.value && styles.finituraCardSelected
+              ]}
+              onPress={() => updateConfig({ finitura: option.value as any })}
+            >
+              {option.color && (
+                <View style={[styles.colorIndicator, { backgroundColor: option.color }]} />
+              )}
+              <View style={styles.finituraContent}>
+                <Text style={[
+                  styles.finituraLabel,
+                  config.finitura === option.value && styles.finituraLabelSelected
+                ]}>
+                  {option.label}
+                </Text>
+                <Text style={[
+                  styles.finituraDescription,
+                  config.finitura === option.value && styles.finituraDescriptionSelected
+                ]}>
+                  {option.description}
+                </Text>
+              </View>
+              {config.finitura === option.value && (
+                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.numberOfPeople}</Text>
         <View style={styles.peopleSelector}>
           <TouchableOpacity
@@ -125,7 +192,7 @@ export default function CustomizeCakeScreen() {
             <Text style={styles.peopleNumber}>{config.numberOfPeople}</Text>
             <Text style={styles.peopleLabel}>persone</Text>
             <Text style={styles.weightLabel}>
-              ({config.numberOfPeople * GRAMS_PER_PERSON}g totali)
+              ({config.numberOfPeople * GRAMS_PER_PERSON}g = {((config.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg)
             </Text>
           </View>
           <TouchableOpacity
@@ -168,6 +235,11 @@ export default function CustomizeCakeScreen() {
         <View style={styles.priceCard}>
           <Text style={styles.priceLabel}>{UI_TEXTS.customizeCake.priceLabel}</Text>
           <Text style={styles.priceValue}>€{calculatePrice().toFixed(2)}</Text>
+          <Text style={styles.priceBreakdown}>
+            {((config.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg × €{CAKE_PRICING.pricePerKg}/kg
+            {CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura)?.price ? 
+              ` + €${CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura)?.price} (finitura)` : ''}
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -201,6 +273,88 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: 20,
     marginBottom: 12,
+  },
+  optionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 10,
+  },
+  optionCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    minWidth: '48%',
+    flex: 1,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.06)',
+    elevation: 1,
+  },
+  optionCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.highlight,
+  },
+  optionLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  optionLabelSelected: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  optionPrice: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  finituraCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.background,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.06)',
+    elevation: 1,
+    marginBottom: 8,
+    width: '100%',
+  },
+  finituraCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.highlight,
+  },
+  colorIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.textSecondary + '40',
+  },
+  finituraContent: {
+    flex: 1,
+  },
+  finituraLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  finituraLabelSelected: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  finituraDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  finituraDescriptionSelected: {
+    color: colors.text,
   },
   peopleSelector: {
     flexDirection: 'row',
@@ -298,6 +452,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  priceBreakdown: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    marginTop: 8,
+    opacity: 0.9,
   },
   continueButton: {
     backgroundColor: colors.secondary,
