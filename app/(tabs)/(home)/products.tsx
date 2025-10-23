@@ -7,6 +7,7 @@ import { ADDITIONAL_PRODUCTS } from '@/data/products';
 import { OrderItem } from '@/types/order';
 import ProductCard from '@/components/ProductCard';
 import { IconSymbol } from '@/components/IconSymbol';
+import { UI_TEXTS } from '@/config/appConfig';
 
 export default function ProductsScreen() {
   const router = useRouter();
@@ -18,7 +19,10 @@ export default function ProductsScreen() {
 
   const addProduct = (productId: string) => {
     const product = ADDITIONAL_PRODUCTS.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      console.log('Product not found:', productId);
+      return;
+    }
 
     setOrderItems(prev => {
       const existing = prev.find(item => item.product.id === productId);
@@ -60,7 +64,7 @@ export default function ProductsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Altri Prodotti',
+          title: UI_TEXTS.products.title,
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -76,9 +80,9 @@ export default function ProductsScreen() {
             Platform.OS !== 'ios' && styles.contentContainerWithTabBar
           ]}
         >
-          <Text style={styles.header}>Aggiungi Altri Prodotti</Text>
+          <Text style={styles.header}>{UI_TEXTS.products.title}</Text>
           <Text style={styles.subheader}>
-            Completa il tuo ordine con i nostri dolci artigianali
+            {UI_TEXTS.products.subtitle}
           </Text>
 
           {ADDITIONAL_PRODUCTS.map(product => (
@@ -93,7 +97,7 @@ export default function ProductsScreen() {
 
           {orderItems.length > 0 && (
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Riepilogo Prodotti Aggiuntivi</Text>
+              <Text style={styles.summaryTitle}>{UI_TEXTS.products.summaryTitle}</Text>
               {orderItems.map(item => (
                 <View key={item.product.id} style={styles.summaryRow}>
                   <Text style={styles.summaryItemName}>
@@ -106,7 +110,7 @@ export default function ProductsScreen() {
               ))}
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryTotalLabel}>Totale Prodotti</Text>
+                <Text style={styles.summaryTotalLabel}>{UI_TEXTS.products.totalLabel}</Text>
                 <Text style={styles.summaryTotalValue}>€{calculateTotal().toFixed(2)}</Text>
               </View>
             </View>
@@ -126,7 +130,7 @@ export default function ProductsScreen() {
                 style={styles.checkoutButton}
                 onPress={() => router.push('/(tabs)/(home)/checkout')}
               >
-                <Text style={styles.checkoutButtonText}>Vai al Pagamento</Text>
+                <Text style={styles.checkoutButtonText}>{UI_TEXTS.products.checkoutButton}</Text>
                 <IconSymbol name="arrow.right" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -139,7 +143,7 @@ export default function ProductsScreen() {
               style={styles.skipButton}
               onPress={() => router.push('/(tabs)/(home)/checkout')}
             >
-              <Text style={styles.skipButtonText}>Salta e Vai al Pagamento</Text>
+              <Text style={styles.skipButtonText}>{UI_TEXTS.products.skipButton}</Text>
             </TouchableOpacity>
           </View>
         )}

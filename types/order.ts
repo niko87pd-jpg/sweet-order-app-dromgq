@@ -30,21 +30,19 @@ export interface Order {
   depositAmount: number;
 }
 
-export const CAKE_BASES: { value: CakeBase; label: string }[] = [
-  { value: 'pasta_sfoglia', label: 'Pasta Sfoglia' },
-  { value: 'pasta_frolla', label: 'Pasta Frolla' },
-  { value: 'meringa', label: 'Meringa' },
-  { value: 'pan_di_spagna', label: 'Pan di Spagna' },
-];
+// Importa le configurazioni dal file di config
+import { CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, CAKE_PRICING } from '@/config/appConfig';
 
-export const CAKE_CREAMS: { value: CakeCream; label: string }[] = [
-  { value: 'chantilly', label: 'Chantilly' },
-  { value: 'cioccolato', label: 'Cioccolato' },
-  { value: 'pistacchio', label: 'Pistacchio' },
-  { value: 'nocciola', label: 'Nocciola' },
-];
+export const CAKE_BASES: { value: CakeBase; label: string }[] = CAKE_BASES_CONFIG.map(base => ({
+  value: base.value as CakeBase,
+  label: base.label,
+}));
 
-export const GRAMS_PER_PERSON = 140;
+export const CAKE_CREAMS: { value: CakeCream; label: string }[] = CAKE_CREAMS_CONFIG.map(cream => ({
+  value: cream.value as CakeCream,
+  label: cream.label,
+}));
 
-export const BASE_CAKE_PRICE = 25; // Base price for cake
-export const PRICE_PER_100G = 3.5; // Price per 100g
+export const GRAMS_PER_PERSON = CAKE_PRICING.gramsPerPerson;
+export const BASE_CAKE_PRICE = CAKE_PRICING.basePrice;
+export const PRICE_PER_100G = CAKE_PRICING.pricePerHundredGrams;

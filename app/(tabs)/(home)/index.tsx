@@ -5,6 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { TouchableOpacity } from 'react-native';
+import { PASTRY_INFO, UI_TEXTS } from '@/config/appConfig';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function HomeScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Pasticceria Dolce Vita',
+          title: PASTRY_INFO.name,
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -31,10 +32,10 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.header}>
-          <Text style={styles.emoji}>🧁</Text>
-          <Text style={styles.title}>Benvenuto!</Text>
+          <Text style={styles.emoji}>{PASTRY_INFO.emoji}</Text>
+          <Text style={styles.title}>{PASTRY_INFO.welcomeTitle}</Text>
           <Text style={styles.subtitle}>
-            Crea il tuo dolce personalizzato o scegli dai nostri prodotti
+            {PASTRY_INFO.welcomeSubtitle}
           </Text>
         </View>
 
@@ -46,9 +47,9 @@ export default function HomeScreen() {
             <IconSymbol name="birthday.cake" size={40} color="#FFFFFF" />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>Crea il Tuo Dolce</Text>
+            <Text style={styles.cardTitle}>{UI_TEXTS.home.createCakeTitle}</Text>
             <Text style={styles.cardDescription}>
-              Personalizza base, crema, dimensione e dedica
+              {UI_TEXTS.home.createCakeDescription}
             </Text>
           </View>
           <IconSymbol name="chevron.right" size={24} color={colors.textSecondary} />
@@ -62,32 +63,22 @@ export default function HomeScreen() {
             <IconSymbol name="cart" size={40} color="#FFFFFF" />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>Altri Prodotti</Text>
+            <Text style={styles.cardTitle}>{UI_TEXTS.home.productsTitle}</Text>
             <Text style={styles.cardDescription}>
-              Scopri la nostra selezione di dolci artigianali
+              {UI_TEXTS.home.productsDescription}
             </Text>
           </View>
           <IconSymbol name="chevron.right" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Come Funziona</Text>
-          <View style={styles.infoStep}>
-            <Text style={styles.stepNumber}>1</Text>
-            <Text style={styles.stepText}>Configura il tuo dolce personalizzato</Text>
-          </View>
-          <View style={styles.infoStep}>
-            <Text style={styles.stepNumber}>2</Text>
-            <Text style={styles.stepText}>Aggiungi altri prodotti se desideri</Text>
-          </View>
-          <View style={styles.infoStep}>
-            <Text style={styles.stepNumber}>3</Text>
-            <Text style={styles.stepText}>Paga il 50% come acconto alla conferma</Text>
-          </View>
-          <View style={styles.infoStep}>
-            <Text style={styles.stepNumber}>4</Text>
-            <Text style={styles.stepText}>Ritira il tuo ordine in pasticceria</Text>
-          </View>
+          <Text style={styles.infoTitle}>{UI_TEXTS.home.howItWorksTitle}</Text>
+          {UI_TEXTS.home.steps.map((step, index) => (
+            <View key={index} style={styles.infoStep}>
+              <Text style={styles.stepNumber}>{index + 1}</Text>
+              <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
         </View>
       </ScrollView>
     </>

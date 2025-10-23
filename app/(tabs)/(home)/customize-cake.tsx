@@ -8,13 +8,14 @@ import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, BASE_CAKE_PRICE, PRICE_PER_
 import OptionSelector from '@/components/OptionSelector';
 import CakePreview from '@/components/CakePreview';
 import { IconSymbol } from '@/components/IconSymbol';
+import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING } from '@/config/appConfig';
 
 export default function CustomizeCakeScreen() {
   const router = useRouter();
   const [config, setConfig] = useState<CakeConfiguration>({
     base: null,
     cream: null,
-    numberOfPeople: 4,
+    numberOfPeople: CAKE_PRICING.defaultPeople,
     dedication: '',
     photoUri: null,
   });
@@ -24,22 +25,30 @@ export default function CustomizeCakeScreen() {
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
-      Alert.alert('Permesso Negato', 'È necessario il permesso per accedere alla galleria');
-      return;
-    }
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          MESSAGES.errors.permissionDenied,
+          MESSAGES.errors.permissionDeniedDescription
+        );
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: PHOTO_CONFIG.allowsEditing,
+        aspect: PHOTO_CONFIG.aspectRatio as [number, number],
+        quality: PHOTO_CONFIG.quality,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      updateConfig({ photoUri: result.assets[0].uri });
+      if (!result.canceled && result.assets[0]) {
+        updateConfig({ photoUri: result.assets[0].uri });
+      }
+    } catch (error) {
+      console.log('Error picking image:', error);
+      Alert.alert('Errore', 'Si è verificato un errore durante la selezione dell\'immagine');
     }
   };
 
@@ -53,11 +62,14 @@ export default function CustomizeCakeScreen() {
 
   const handleContinue = () => {
     if (!canProceed) {
-      Alert.alert('Configurazione Incompleta', 'Seleziona base e crema per continuare');
+      Alert.alert(
+        MESSAGES.errors.incompleteConfiguration,
+        MESSAGES.errors.incompleteConfigurationDescription
+      );
       return;
     }
     
-    // Store config in a context or pass via params
+    console.log('Cake configuration:', config);
     router.push({
       pathname: '/(tabs)/(home)/products',
       params: { cakeConfigured: 'true' }
@@ -68,7 +80,7 @@ export default function CustomizeCakeScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Personalizza il Tuo Dolce',
+          title: UI_TEXTS.customizeCake.title,
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -83,7 +95,7 @@ export default function CustomizeCakeScreen() {
           Platform.OS !== 'ios' && styles.contentContainerWithTabBar
         ]}
       >
-        <Text style={styles.sectionTitle}>Scegli la Base</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseBase}</Text>
         <OptionSelector
           title=""
           options={CAKE_BASES}
@@ -91,7 +103,7 @@ export default function CustomizeCakeScreen() {
           onSelect={(value) => updateConfig({ base: value as any })}
         />
 
-        <Text style={styles.sectionTitle}>Scegli la Crema</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCream}</Text>
         <OptionSelector
           title=""
           options={CAKE_CREAMS}
@@ -99,11 +111,13 @@ export default function CustomizeCakeScreen() {
           onSelect={(value) => updateConfig({ cream: value as any })}
         />
 
-        <Text style={styles.sectionTitle}>Numero di Persone</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.numberOfPeople}</Text>
         <View style={styles.peopleSelector}>
           <TouchableOpacity
             style={styles.peopleButton}
-            onPress={() => updateConfig({ numberOfPeople: Math.max(1, config.numberOfPeople - 1) })}
+            onPress={() => updateConfig({ 
+              numberOfPeople: Math.max(CAKE_PRICING.minPeople, config.numberOfPeople - 1) 
+            })}
           >
             <IconSymbol name="minus" size={24} color={colors.primary} />
           </TouchableOpacity>
@@ -116,28 +130,32 @@ export default function CustomizeCakeScreen() {
           </View>
           <TouchableOpacity
             style={styles.peopleButton}
-            onPress={() => updateConfig({ numberOfPeople: config.numberOfPeople + 1 })}
+            onPress={() => updateConfig({ 
+              numberOfPeople: Math.min(CAKE_PRICING.maxPeople, config.numberOfPeople + 1) 
+            })}
           >
             <IconSymbol name="plus" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Dedica sul Dolce</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.dedication}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Es: Buon Compleanno Maria!"
+          placeholder={DEDICATION_CONFIG.placeholder}
           placeholderTextColor={colors.textSecondary}
           value={config.dedication}
           onChangeText={(text) => updateConfig({ dedication: text })}
-          maxLength={50}
+          maxLength={DEDICATION_CONFIG.maxLength}
         />
-        <Text style={styles.charCount}>{config.dedication.length}/50 caratteri</Text>
+        <Text style={styles.charCount}>
+          {config.dedication.length}/{DEDICATION_CONFIG.maxLength} caratteri
+        </Text>
 
-        <Text style={styles.sectionTitle}>Foto sul Dolce (Opzionale)</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.photo}</Text>
         <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
           <IconSymbol name="photo" size={32} color={colors.primary} />
           <Text style={styles.photoButtonText}>
-            {config.photoUri ? 'Cambia Foto' : 'Aggiungi Foto'}
+            {config.photoUri ? UI_TEXTS.customizeCake.changePhoto : UI_TEXTS.customizeCake.addPhoto}
           </Text>
         </TouchableOpacity>
 
@@ -148,7 +166,7 @@ export default function CustomizeCakeScreen() {
         )}
 
         <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>Prezzo Dolce Personalizzato</Text>
+          <Text style={styles.priceLabel}>{UI_TEXTS.customizeCake.priceLabel}</Text>
           <Text style={styles.priceValue}>€{calculatePrice().toFixed(2)}</Text>
         </View>
 
@@ -157,7 +175,7 @@ export default function CustomizeCakeScreen() {
           onPress={handleContinue}
           disabled={!canProceed}
         >
-          <Text style={styles.continueButtonText}>Continua con Altri Prodotti</Text>
+          <Text style={styles.continueButtonText}>{UI_TEXTS.customizeCake.continueButton}</Text>
           <IconSymbol name="arrow.right" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </ScrollView>

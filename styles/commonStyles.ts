@@ -1,16 +1,15 @@
 
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { THEME_COLORS } from '@/config/appConfig';
 
-export const colors = {
-  background: '#F8F8FF',
-  text: '#282828',
-  textSecondary: '#585858',
-  primary: '#E91E63',
-  secondary: '#9C27B0',
-  accent: '#FF4081',
-  card: '#FFFFFF',
-  highlight: '#FFD180',
-};
+/**
+ * STILI COMUNI DELL'APP
+ * 
+ * I colori sono importati da config/appConfig.ts
+ * Per personalizzare i colori, modifica il file config/appConfig.ts
+ */
+
+export const colors = THEME_COLORS;
 
 export const buttonStyles = StyleSheet.create({
   instructionsButton: {

@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform }
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
+import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG } from '@/config/appConfig';
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -13,28 +14,37 @@ export default function CheckoutScreen() {
   const cakePrice = 38.50;
   const productsPrice = 15.50;
   const totalPrice = cakePrice + productsPrice;
-  const depositAmount = totalPrice * 0.5;
+  const depositAmount = totalPrice * PAYMENT_CONFIG.depositPercentage;
   const remainingAmount = totalPrice - depositAmount;
 
   const handlePayment = () => {
     if (!paymentMethod) {
-      Alert.alert('Seleziona Metodo di Pagamento', 'Scegli come vuoi pagare l\'acconto');
+      Alert.alert(
+        MESSAGES.errors.selectPaymentMethod,
+        MESSAGES.errors.selectPaymentMethodDescription
+      );
       return;
     }
 
+    console.log('Processing payment:', {
+      method: paymentMethod,
+      amount: depositAmount,
+      totalPrice,
+    });
+
     Alert.alert(
-      'Pagamento Simulato',
-      `Acconto di €${depositAmount.toFixed(2)} pagato con successo!\n\nQuesto è un pagamento simulato. In produzione, qui si integrerebbe un sistema di pagamento reale come Stripe o PayPal.`,
+      MESSAGES.success.paymentSimulated,
+      `${MESSAGES.success.paymentSimulatedDescription.replace('Acconto pagato', `Acconto di €${depositAmount.toFixed(2)} pagato`)}`,
       [
         {
           text: 'OK',
           onPress: () => {
             Alert.alert(
-              'Ordine Confermato! 🎉',
-              'Il tuo ordine è stato confermato. Riceverai una notifica quando sarà pronto per il ritiro.',
+              MESSAGES.success.orderConfirmed,
+              MESSAGES.success.orderConfirmedDescription,
               [
                 {
-                  text: 'Torna alla Home',
+                  text: MESSAGES.success.backToHome,
                   onPress: () => router.push('/(tabs)/(home)/'),
                 }
               ]
@@ -49,7 +59,7 @@ export default function CheckoutScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Conferma Ordine',
+          title: UI_TEXTS.checkout.title,
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -66,11 +76,11 @@ export default function CheckoutScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.emoji}>🎂</Text>
-          <Text style={styles.title}>Riepilogo Ordine</Text>
+          <Text style={styles.title}>{UI_TEXTS.checkout.orderSummary}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Dolce Personalizzato</Text>
+          <Text style={styles.cardTitle}>{UI_TEXTS.checkout.customCake}</Text>
           <View style={styles.row}>
             <Text style={styles.itemLabel}>Base: Pan di Spagna</Text>
           </View>
@@ -81,7 +91,7 @@ export default function CheckoutScreen() {
             <Text style={styles.itemLabel}>Persone: 4 (560g)</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.itemLabel}>Dedica: "Buon Compleanno!"</Text>
+            <Text style={styles.itemLabel}>Dedica: &quot;Buon Compleanno!&quot;</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.row}>
@@ -91,7 +101,7 @@ export default function CheckoutScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Prodotti Aggiuntivi</Text>
+          <Text style={styles.cardTitle}>{UI_TEXTS.checkout.additionalProducts}</Text>
           <View style={styles.row}>
             <Text style={styles.itemLabel}>Cannoli Siciliani x2</Text>
             <Text style={styles.itemValue}>€7.00</Text>
@@ -102,83 +112,87 @@ export default function CheckoutScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.row}>
-            <Text style={styles.priceLabel}>Totale Prodotti</Text>
+            <Text style={styles.priceLabel}>{UI_TEXTS.checkout.additionalProducts}</Text>
             <Text style={styles.priceValue}>€{productsPrice.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.totalCard}>
           <View style={styles.row}>
-            <Text style={styles.totalLabel}>Totale Ordine</Text>
+            <Text style={styles.totalLabel}>{UI_TEXTS.checkout.totalOrder}</Text>
             <Text style={styles.totalValue}>€{totalPrice.toFixed(2)}</Text>
           </View>
           <View style={styles.depositRow}>
             <View style={styles.depositInfo}>
               <IconSymbol name="info.circle" size={20} color="#FFFFFF" />
               <Text style={styles.depositText}>
-                Acconto richiesto (50%)
+                {UI_TEXTS.checkout.depositRequired}
               </Text>
             </View>
             <Text style={styles.depositValue}>€{depositAmount.toFixed(2)}</Text>
           </View>
           <Text style={styles.remainingText}>
-            Rimanente da pagare al ritiro: €{remainingAmount.toFixed(2)}
+            {UI_TEXTS.checkout.remainingText}: €{remainingAmount.toFixed(2)}
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Metodo di Pagamento</Text>
+        <Text style={styles.sectionTitle}>{UI_TEXTS.checkout.paymentMethod}</Text>
         
-        <TouchableOpacity
-          style={[
-            styles.paymentOption,
-            paymentMethod === 'card' && styles.paymentOptionSelected
-          ]}
-          onPress={() => setPaymentMethod('card')}
-        >
-          <View style={styles.paymentOptionContent}>
-            <IconSymbol name="creditcard" size={28} color={paymentMethod === 'card' ? colors.primary : colors.text} />
-            <View style={styles.paymentOptionText}>
-              <Text style={[
-                styles.paymentOptionTitle,
-                paymentMethod === 'card' && styles.paymentOptionTitleSelected
-              ]}>
-                Carta di Credito/Debito
-              </Text>
-              <Text style={styles.paymentOptionDescription}>
-                Visa, Mastercard, American Express
-              </Text>
+        {PAYMENT_CONFIG.paymentMethods.card.enabled && (
+          <TouchableOpacity
+            style={[
+              styles.paymentOption,
+              paymentMethod === 'card' && styles.paymentOptionSelected
+            ]}
+            onPress={() => setPaymentMethod('card')}
+          >
+            <View style={styles.paymentOptionContent}>
+              <IconSymbol name="creditcard" size={28} color={paymentMethod === 'card' ? colors.primary : colors.text} />
+              <View style={styles.paymentOptionText}>
+                <Text style={[
+                  styles.paymentOptionTitle,
+                  paymentMethod === 'card' && styles.paymentOptionTitleSelected
+                ]}>
+                  {PAYMENT_CONFIG.paymentMethods.card.label}
+                </Text>
+                <Text style={styles.paymentOptionDescription}>
+                  {PAYMENT_CONFIG.paymentMethods.card.description}
+                </Text>
+              </View>
             </View>
-          </View>
-          {paymentMethod === 'card' && (
-            <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-          )}
-        </TouchableOpacity>
+            {paymentMethod === 'card' && (
+              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+        )}
 
-        <TouchableOpacity
-          style={[
-            styles.paymentOption,
-            paymentMethod === 'paypal' && styles.paymentOptionSelected
-          ]}
-          onPress={() => setPaymentMethod('paypal')}
-        >
-          <View style={styles.paymentOptionContent}>
-            <IconSymbol name="dollarsign.circle" size={28} color={paymentMethod === 'paypal' ? colors.primary : colors.text} />
-            <View style={styles.paymentOptionText}>
-              <Text style={[
-                styles.paymentOptionTitle,
-                paymentMethod === 'paypal' && styles.paymentOptionTitleSelected
-              ]}>
-                PayPal
-              </Text>
-              <Text style={styles.paymentOptionDescription}>
-                Paga in modo sicuro con PayPal
-              </Text>
+        {PAYMENT_CONFIG.paymentMethods.paypal.enabled && (
+          <TouchableOpacity
+            style={[
+              styles.paymentOption,
+              paymentMethod === 'paypal' && styles.paymentOptionSelected
+            ]}
+            onPress={() => setPaymentMethod('paypal')}
+          >
+            <View style={styles.paymentOptionContent}>
+              <IconSymbol name="dollarsign.circle" size={28} color={paymentMethod === 'paypal' ? colors.primary : colors.text} />
+              <View style={styles.paymentOptionText}>
+                <Text style={[
+                  styles.paymentOptionTitle,
+                  paymentMethod === 'paypal' && styles.paymentOptionTitleSelected
+                ]}>
+                  {PAYMENT_CONFIG.paymentMethods.paypal.label}
+                </Text>
+                <Text style={styles.paymentOptionDescription}>
+                  {PAYMENT_CONFIG.paymentMethods.paypal.description}
+                </Text>
+              </View>
             </View>
-          </View>
-          {paymentMethod === 'paypal' && (
-            <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-          )}
-        </TouchableOpacity>
+            {paymentMethod === 'paypal' && (
+              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={[
@@ -189,7 +203,7 @@ export default function CheckoutScreen() {
           disabled={!paymentMethod}
         >
           <Text style={styles.confirmButtonText}>
-            Paga Acconto €{depositAmount.toFixed(2)}
+            {UI_TEXTS.checkout.confirmButton} €{depositAmount.toFixed(2)}
           </Text>
           <IconSymbol name="lock.fill" size={20} color="#FFFFFF" />
         </TouchableOpacity>
@@ -197,7 +211,7 @@ export default function CheckoutScreen() {
         <View style={styles.infoBox}>
           <IconSymbol name="info.circle" size={24} color={colors.primary} />
           <Text style={styles.infoText}>
-            Il pagamento è sicuro e protetto. Pagherai solo il 50% ora, il resto al ritiro del tuo ordine.
+            {UI_TEXTS.checkout.securityInfo}
           </Text>
         </View>
       </ScrollView>
