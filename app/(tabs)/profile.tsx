@@ -1,11 +1,25 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking, TouchableOpacity } from 'react-native';
 import { Stack } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
+import { PASTRY_INFO } from '@/config/appConfig';
 
 export default function ProfileScreen() {
+  const handleCall = () => {
+    Linking.openURL(`tel:${PASTRY_INFO.phone}`);
+  };
+
+  const handleEmail = () => {
+    Linking.openURL(`mailto:${PASTRY_INFO.email}`);
+  };
+
+  const handleAddress = () => {
+    const encodedAddress = encodeURIComponent(PASTRY_INFO.address);
+    Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
+  };
+
   return (
     <>
       <Stack.Screen
@@ -28,87 +42,94 @@ export default function ProfileScreen() {
         ]}
       >
         <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarEmoji}>👤</Text>
-          </View>
-          <Text style={styles.name}>Cliente</Text>
-          <Text style={styles.email}>cliente@example.com</Text>
+          {PASTRY_INFO.logo && (
+            <Image 
+              source={PASTRY_INFO.logo} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          )}
+          <Text style={styles.shopName}>{PASTRY_INFO.name}</Text>
+          <Text style={styles.emoji}>{PASTRY_INFO.emoji}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>I Miei Ordini</Text>
+          <Text style={styles.sectionTitle}>Contatti</Text>
           
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="list.bullet" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Ordini Attivi</Text>
+          <TouchableOpacity style={styles.contactCard} onPress={handleCall}>
+            <View style={styles.iconContainer}>
+              <IconSymbol name="phone" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.contactContent}>
+              <Text style={styles.contactLabel}>Telefono</Text>
+              <Text style={styles.contactValue}>{PASTRY_INFO.phone}</Text>
             </View>
             <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="clock" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Storico Ordini</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Impostazioni</Text>
-          
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="person" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Dati Personali</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="bell" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Notifiche</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="creditcard" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Metodi di Pagamento</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Supporto</Text>
-          
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <IconSymbol name="questionmark.circle" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Centro Assistenza</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
+          <TouchableOpacity style={styles.contactCard} onPress={handleEmail}>
+            <View style={styles.iconContainer}>
               <IconSymbol name="envelope" size={24} color={colors.primary} />
-              <Text style={styles.menuItemText}>Contattaci</Text>
+            </View>
+            <View style={styles.contactContent}>
+              <Text style={styles.contactLabel}>Email</Text>
+              <Text style={styles.contactValue}>{PASTRY_INFO.email}</Text>
+            </View>
+            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.contactCard} onPress={handleAddress}>
+            <View style={styles.iconContainer}>
+              <IconSymbol name="location" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.contactContent}>
+              <Text style={styles.contactLabel}>Indirizzo</Text>
+              <Text style={styles.contactValue}>{PASTRY_INFO.address}</Text>
             </View>
             <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Pasticceria Dolce Vita</Text>
-          <Text style={styles.infoText}>📍 Via Roma 123, Milano</Text>
-          <Text style={styles.infoText}>📞 +39 02 1234567</Text>
-          <Text style={styles.infoText}>🕐 Lun-Sab: 8:00-20:00</Text>
-          <Text style={styles.infoText}>🕐 Dom: 9:00-13:00</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Orari di Apertura</Text>
+          
+          <View style={styles.hoursCard}>
+            <View style={styles.hoursRow}>
+              <Text style={styles.dayLabel}>Lunedì - Venerdì</Text>
+              <Text style={styles.hoursValue}>{PASTRY_INFO.openingHours.weekdays}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.hoursRow}>
+              <Text style={styles.dayLabel}>Sabato</Text>
+              <Text style={styles.hoursValue}>{PASTRY_INFO.openingHours.saturday}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.hoursRow}>
+              <Text style={styles.dayLabel}>Domenica</Text>
+              <Text style={styles.hoursValue}>{PASTRY_INFO.openingHours.sunday}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informazioni App</Text>
+          
+          <View style={styles.infoCard}>
+            <Text style={styles.infoText}>
+              Questa app ti permette di ordinare dolci personalizzati e prodotti artigianali dalla nostra pasticceria.
+            </Text>
+            <Text style={styles.infoText}>
+              Puoi configurare il tuo dolce scegliendo base, crema, dimensione e aggiungere una dedica personalizzata.
+            </Text>
+            <Text style={styles.infoText}>
+              Il pagamento richiede un acconto del 50% alla conferma dell&apos;ordine, il resto verrà pagato al ritiro.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Versione 1.0.0</Text>
+          <Text style={styles.footerText}>© 2024 {PASTRY_INFO.name}</Text>
         </View>
       </ScrollView>
     </>
@@ -129,78 +150,117 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 30,
+    paddingVertical: 20,
   },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.highlight,
-    justifyContent: 'center',
-    alignItems: 'center',
+  logo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginBottom: 16,
+    borderWidth: 3,
+    borderColor: colors.primary,
   },
-  avatarEmoji: {
-    fontSize: 50,
-  },
-  name: {
+  shopName: {
     fontSize: 24,
     fontWeight: '800',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  email: {
-    fontSize: 16,
-    color: colors.textSecondary,
+  emoji: {
+    fontSize: 40,
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 12,
   },
-  menuItem: {
+  contactCard: {
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
     elevation: 2,
   },
-  menuItemLeft: {
-    flexDirection: 'row',
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.highlight,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    marginRight: 12,
   },
-  menuItemText: {
-    fontSize: 16,
+  contactContent: {
+    flex: 1,
+  },
+  contactLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  contactValue: {
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
   },
-  infoCard: {
+  hoursCard: {
     backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 8,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-    elevation: 4,
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 2,
   },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  hoursRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dayLabel: {
+    fontSize: 15,
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 12,
   },
-  infoText: {
+  hoursValue: {
     fontSize: 15,
     color: colors.textSecondary,
-    marginBottom: 6,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.background,
+    marginVertical: 4,
+  },
+  infoCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 2,
+  },
+  infoText: {
+    fontSize: 14,
+    color: colors.text,
     lineHeight: 22,
+    marginBottom: 12,
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.textSecondary + '30',
+  },
+  footerText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
   },
 });

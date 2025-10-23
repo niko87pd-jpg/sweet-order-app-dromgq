@@ -16,6 +16,9 @@ export const PASTRY_INFO = {
   // Emoji o icona principale (apparirà nella home)
   emoji: '🧁',
   
+  // Logo della pasticceria (percorso al file immagine)
+  logo: require('@/assets/images/b27037d7-641b-4c48-9b18-7bf63e20cb9f.jpeg'),
+  
   // Messaggio di benvenuto
   welcomeTitle: 'Benvenuto!',
   welcomeSubtitle: 'Crea il tuo dolce personalizzato o scegli dai nostri prodotti',

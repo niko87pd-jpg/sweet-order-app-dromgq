@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Image } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -32,6 +32,13 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.header}>
+          {PASTRY_INFO.logo && (
+            <Image 
+              source={PASTRY_INFO.logo} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          )}
           <Text style={styles.emoji}>{PASTRY_INFO.emoji}</Text>
           <Text style={styles.title}>{PASTRY_INFO.welcomeTitle}</Text>
           <Text style={styles.subtitle}>
@@ -80,6 +87,22 @@ export default function HomeScreen() {
             </View>
           ))}
         </View>
+
+        <View style={styles.contactCard}>
+          <Text style={styles.contactTitle}>Contattaci</Text>
+          <View style={styles.contactRow}>
+            <IconSymbol name="phone" size={20} color={colors.primary} />
+            <Text style={styles.contactText}>{PASTRY_INFO.phone}</Text>
+          </View>
+          <View style={styles.contactRow}>
+            <IconSymbol name="envelope" size={20} color={colors.primary} />
+            <Text style={styles.contactText}>{PASTRY_INFO.email}</Text>
+          </View>
+          <View style={styles.contactRow}>
+            <IconSymbol name="location" size={20} color={colors.primary} />
+            <Text style={styles.contactText}>{PASTRY_INFO.address}</Text>
+          </View>
+        </View>
       </ScrollView>
     </>
   );
@@ -101,6 +124,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  logo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: colors.primary,
+  },
   emoji: {
     fontSize: 60,
     marginBottom: 16,
@@ -116,6 +147,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
+    paddingHorizontal: 20,
   },
   mainCard: {
     backgroundColor: colors.card,
@@ -155,6 +187,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginTop: 10,
+    marginBottom: 16,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
     elevation: 4,
   },
@@ -186,5 +219,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     lineHeight: 20,
+  },
+  contactCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
+  },
+  contactTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactText: {
+    fontSize: 15,
+    color: colors.text,
+    marginLeft: 12,
+    flex: 1,
   },
 });
