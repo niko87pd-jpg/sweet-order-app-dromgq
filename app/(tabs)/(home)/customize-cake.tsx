@@ -7,7 +7,7 @@ import { colors } from '@/styles/commonStyles';
 import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, MERINGA_FILLINGS, GRAMS_PER_PERSON } from '@/types/order';
 import OptionSelector from '@/components/OptionSelector';
 import { IconSymbol } from '@/components/IconSymbol';
-import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
+import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_CONDIMENTO_CONFIG, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
 import { useOrder } from '@/contexts/OrderContext';
 
 export default function CustomizeCakeScreen() {
@@ -135,6 +135,15 @@ export default function CustomizeCakeScreen() {
             </Text>
           </View>
         )}
+
+        {config.condimento !== 'nessuno' && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Condimento:</Text>
+            <Text style={styles.summaryValue}>
+              {CAKE_CONDIMENTO_CONFIG.find(c => c.value === config.condimento)?.label}
+            </Text>
+          </View>
+        )}
         
         {!isMeringa && config.variegatura !== 'nessuna' && (
           <View style={styles.summaryRow}>
@@ -248,6 +257,27 @@ export default function CustomizeCakeScreen() {
               selectedValue={config.cream}
               onSelect={(value) => updateConfig({ cream: value as any })}
             />
+
+            <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCondimento}</Text>
+            <View style={styles.optionsGrid}>
+              {CAKE_CONDIMENTO_CONFIG.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.optionCard,
+                    config.condimento === option.value && styles.optionCardSelected
+                  ]}
+                  onPress={() => updateConfig({ condimento: option.value as any })}
+                >
+                  <Text style={[
+                    styles.optionLabel,
+                    config.condimento === option.value && styles.optionLabelSelected
+                  ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseVariegatura}</Text>
             <View style={styles.optionsGrid}>

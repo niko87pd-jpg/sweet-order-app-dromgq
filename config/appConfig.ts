@@ -174,6 +174,54 @@ export const MERINGA_FILLINGS_CONFIG = [
 ];
 
 // ============================================
+// OPZIONI DOLCI - CONDIMENTO
+// ============================================
+export const CAKE_CONDIMENTO_CONFIG = [
+  {
+    value: 'nessuno',
+    label: 'Nessun Condimento',
+    description: 'Senza condimento',
+    price: 0,
+  },
+  {
+    value: 'frutta_mista',
+    label: 'Frutta Mista',
+    description: 'Frutta fresca di stagione',
+    price: 0,
+  },
+  {
+    value: 'fragole',
+    label: 'Fragole',
+    description: 'Fragole fresche',
+    price: 0,
+  },
+  {
+    value: 'gocce_cioccolato',
+    label: 'Gocce di Cioccolato',
+    description: 'Gocce di cioccolato fondente',
+    price: 0,
+  },
+  {
+    value: 'granella_nocciole',
+    label: 'Granella di Nocciole',
+    description: 'Nocciole tostate e tritate',
+    price: 0,
+  },
+  {
+    value: 'granella_pistacchio',
+    label: 'Granella di Pistacchio',
+    description: 'Pistacchi tritati',
+    price: 0,
+  },
+  {
+    value: 'scagliette_cioccolato_bianco',
+    label: 'Scagliette Cioccolato Bianco',
+    description: 'Scaglie di cioccolato bianco',
+    price: 0,
+  },
+];
+
+// ============================================
 // OPZIONI DOLCI - VARIEGATURA CON CREME SPALMABILI
 // ============================================
 export const CAKE_VARIEGATURA_CONFIG = [
@@ -291,6 +339,90 @@ export const CAKE_LACTOSE_FREE_CONFIG = [
 ];
 
 // ============================================
+// DOLCI CLASSICI
+// ============================================
+export const CLASSIC_CAKES_CONFIG = [
+  {
+    value: 'millefoglie',
+    label: 'Millefoglie',
+    description: 'Sfoglie croccanti con crema chantilly',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+  },
+  {
+    value: 'dolce_del_re',
+    label: 'Dolce del Re',
+    description: 'Dolce tradizionale con crema e frutta',
+    imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400',
+  },
+  {
+    value: 'dolce_alle_creme',
+    label: 'Dolce alle Creme',
+    description: 'Mix di creme deliziose',
+    imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
+  },
+  {
+    value: 'tiramisu',
+    label: 'Tiramisù',
+    description: 'Classico italiano con mascarpone e caffè',
+    imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400',
+  },
+  {
+    value: 'dolce_al_limone',
+    label: 'Dolce al Limone',
+    description: 'Fresco e profumato al limone',
+    imageUrl: 'https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400',
+  },
+  {
+    value: 'dolce_ai_frutti_di_bosco',
+    label: 'Dolce ai Frutti di Bosco',
+    description: 'Con frutti di bosco freschi',
+    imageUrl: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400',
+  },
+  {
+    value: 'crostata_di_frutta',
+    label: 'Crostata di Frutta',
+    description: 'Pasta frolla con crema e frutta fresca',
+    imageUrl: 'https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400',
+  },
+  {
+    value: 'crostata_al_cioccolato',
+    label: 'Crostata al Cioccolato',
+    description: 'Pasta frolla con ganache al cioccolato',
+    imageUrl: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=400',
+  },
+  {
+    value: 'sant_honore',
+    label: 'Sant&apos;Honoré',
+    description: 'Elegante dolce francese con bignè',
+    imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400',
+  },
+  {
+    value: 'profitterole',
+    label: 'Profitterole',
+    description: 'Bignè con crema e cioccolato',
+    imageUrl: 'https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=400',
+  },
+  {
+    value: 'meringata_alla_frutta',
+    label: 'Meringata alla Frutta',
+    description: 'Meringa con panna e frutta fresca',
+    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
+  },
+  {
+    value: 'meringata_al_cioccolato',
+    label: 'Meringata al Cioccolato',
+    description: 'Meringa con crema al cioccolato',
+    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
+  },
+  {
+    value: 'dolce_al_pistacchio',
+    label: 'Dolce al Pistacchio',
+    description: 'Crema di pistacchio e pan di spagna',
+    imageUrl: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400',
+  },
+];
+
+// ============================================
 // TESTI INTERFACCIA
 // ============================================
 export const UI_TEXTS = {
@@ -315,6 +447,7 @@ export const UI_TEXTS = {
     chooseBase: 'Scegli la Base',
     chooseCream: 'Scegli la Crema',
     chooseMeringaFilling: 'Scegli il Ripieno per Meringa',
+    chooseCondimento: 'Condimento',
     chooseVariegatura: 'Variegatura con Creme Spalmabili',
     chooseFinitura: 'Finitura',
     chooseLactoseFree: 'Opzione Senza Lattosio',
@@ -326,6 +459,20 @@ export const UI_TEXTS = {
     changePhoto: 'Cambia Foto',
     preview: 'Riepilogo Dolce',
     priceLabel: 'Prezzo Dolce Personalizzato',
+    continueButton: 'Continua con Altri Prodotti',
+  },
+
+  classicCake: {
+    title: 'Scegli il Tuo Dolce',
+    selectCake: 'Seleziona un Dolce Classico',
+    numberOfPeople: 'Numero di Persone',
+    dedication: 'Dedica sul Dolce',
+    dedicationPlaceholder: 'Es: Buon Compleanno Maria!',
+    photo: 'Foto sul Dolce (+8€)',
+    addPhoto: 'Aggiungi Foto',
+    changePhoto: 'Cambia Foto',
+    preview: 'Riepilogo Dolce',
+    priceLabel: 'Prezzo Dolce',
     continueButton: 'Continua con Altri Prodotti',
   },
   
@@ -342,6 +489,7 @@ export const UI_TEXTS = {
     title: 'Conferma Ordine',
     orderSummary: 'Riepilogo Ordine',
     customCake: 'Dolce Personalizzato',
+    classicCake: 'Dolce Classico',
     additionalProducts: 'Prodotti Aggiuntivi',
     totalOrder: 'Totale Ordine',
     depositRequired: 'Acconto richiesto (50%)',
@@ -415,6 +563,7 @@ export const MESSAGES = {
     permissionDeniedDescription: 'È necessario il permesso per accedere alla galleria',
     incompleteConfiguration: 'Configurazione Incompleta',
     incompleteConfigurationDescription: 'Seleziona base e crema/ripieno per continuare',
+    incompleteClassicCakeConfiguration: 'Seleziona un dolce e il numero di persone per continuare',
     selectPaymentMethod: 'Seleziona Metodo di Pagamento',
     selectPaymentMethodDescription: 'Scegli come vuoi pagare l\'acconto',
   },
@@ -438,9 +587,11 @@ export default {
   CAKE_BASES_CONFIG,
   CAKE_CREAMS_CONFIG,
   MERINGA_FILLINGS_CONFIG,
+  CAKE_CONDIMENTO_CONFIG,
   CAKE_VARIEGATURA_CONFIG,
   CAKE_FINITURA_CONFIG,
   CAKE_LACTOSE_FREE_CONFIG,
+  CLASSIC_CAKES_CONFIG,
   UI_TEXTS,
   THEME_COLORS,
   DEDICATION_CONFIG,

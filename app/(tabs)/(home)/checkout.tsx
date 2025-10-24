@@ -4,21 +4,27 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform }
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
-import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG } from '@/config/appConfig';
+import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG, CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, MERINGA_FILLINGS_CONFIG, CLASSIC_CAKES_CONFIG, GRAMS_PER_PERSON } from '@/config/appConfig';
+import { useOrder } from '@/contexts/OrderContext';
 
 export default function CheckoutScreen() {
   const router = useRouter();
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | null>(null);
-
-  // Mock data - in real app this would come from context/state management
-  const cakePrice = 38.50;
-  const productsPrice = 15.50;
-  const totalPrice = cakePrice + productsPrice;
-  const depositAmount = totalPrice * PAYMENT_CONFIG.depositPercentage;
-  const remainingAmount = totalPrice - depositAmount;
+  const { 
+    cakeConfig, 
+    classicCakeConfig,
+    orderItems, 
+    getCakePrice, 
+    getClassicCakePrice,
+    getProductsTotal, 
+    getOrderTotal, 
+    getDepositAmount,
+    clearOrder 
+  } = useOrder();
+  
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
 
   const handlePayment = () => {
-    if (!paymentMethod) {
+    if (!selectedPaymentMethod) {
       Alert.alert(
         MESSAGES.errors.selectPaymentMethod,
         MESSAGES.errors.selectPaymentMethodDescription
@@ -26,34 +32,27 @@ export default function CheckoutScreen() {
       return;
     }
 
-    console.log('Processing payment:', {
-      method: paymentMethod,
-      amount: depositAmount,
-      totalPrice,
-    });
+    console.log('Processing payment with method:', selectedPaymentMethod);
+    console.log('Order total:', getOrderTotal());
+    console.log('Deposit amount:', getDepositAmount());
 
     Alert.alert(
       MESSAGES.success.paymentSimulated,
-      `${MESSAGES.success.paymentSimulatedDescription.replace('Acconto pagato', `Acconto di €${depositAmount.toFixed(2)} pagato`)}`,
+      MESSAGES.success.paymentSimulatedDescription,
       [
         {
-          text: 'OK',
+          text: MESSAGES.success.backToHome,
           onPress: () => {
-            Alert.alert(
-              MESSAGES.success.orderConfirmed,
-              MESSAGES.success.orderConfirmedDescription,
-              [
-                {
-                  text: MESSAGES.success.backToHome,
-                  onPress: () => router.push('/(tabs)/(home)/'),
-                }
-              ]
-            );
-          }
-        }
+            clearOrder();
+            router.replace('/(tabs)/(home)/');
+          },
+        },
       ]
     );
   };
+
+  const hasCustomCake = cakeConfig.base !== null;
+  const hasClassicCake = classicCakeConfig.cakeType !== null;
 
   return (
     <>
@@ -74,146 +73,192 @@ export default function CheckoutScreen() {
           Platform.OS !== 'ios' && styles.contentContainerWithTabBar
         ]}
       >
-        <View style={styles.header}>
-          <Text style={styles.emoji}>🎂</Text>
-          <Text style={styles.title}>{UI_TEXTS.checkout.orderSummary}</Text>
-        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>{UI_TEXTS.checkout.orderSummary}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{UI_TEXTS.checkout.customCake}</Text>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Base: Pan di Spagna</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Crema: Pistacchio</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Persone: 4 (560g)</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Dedica: &quot;Buon Compleanno!&quot;</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.priceLabel}>Prezzo Dolce</Text>
-            <Text style={styles.priceValue}>€{cakePrice.toFixed(2)}</Text>
-          </View>
-        </View>
+          {hasCustomCake && (
+            <>
+              <Text style={styles.sectionLabel}>{UI_TEXTS.checkout.customCake}</Text>
+              
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Base:</Text>
+                <Text style={styles.summaryValue}>
+                  {CAKE_BASES_CONFIG.find(b => b.value === cakeConfig.base)?.label}
+                </Text>
+              </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{UI_TEXTS.checkout.additionalProducts}</Text>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Cannoli Siciliani x2</Text>
-            <Text style={styles.itemValue}>€7.00</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.itemLabel}>Macarons x1</Text>
-            <Text style={styles.itemValue}>€8.50</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.priceLabel}>{UI_TEXTS.checkout.additionalProducts}</Text>
-            <Text style={styles.priceValue}>€{productsPrice.toFixed(2)}</Text>
-          </View>
-        </View>
+              {cakeConfig.base === 'meringa' && cakeConfig.meringaFilling && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Ripieno:</Text>
+                  <Text style={styles.summaryValue}>
+                    {MERINGA_FILLINGS_CONFIG.find(f => f.value === cakeConfig.meringaFilling)?.label}
+                  </Text>
+                </View>
+              )}
 
-        <View style={styles.totalCard}>
-          <View style={styles.row}>
+              {cakeConfig.base !== 'meringa' && cakeConfig.cream && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Crema:</Text>
+                  <Text style={styles.summaryValue}>
+                    {CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.cream)?.label}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Persone:</Text>
+                <Text style={styles.summaryValue}>
+                  {cakeConfig.numberOfPeople} ({((cakeConfig.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg)
+                </Text>
+              </View>
+
+              {cakeConfig.dedication && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Dedica:</Text>
+                  <Text style={styles.summaryValue}>&quot;{cakeConfig.dedication}&quot;</Text>
+                </View>
+              )}
+
+              {cakeConfig.photoUri && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Foto:</Text>
+                  <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+                </View>
+              )}
+
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Prezzo Dolce:</Text>
+                <Text style={styles.priceValue}>€{getCakePrice().toFixed(2)}</Text>
+              </View>
+
+              <View style={styles.divider} />
+            </>
+          )}
+
+          {hasClassicCake && (
+            <>
+              <Text style={styles.sectionLabel}>{UI_TEXTS.checkout.classicCake}</Text>
+              
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Dolce:</Text>
+                <Text style={styles.summaryValue}>
+                  {CLASSIC_CAKES_CONFIG.find(c => c.value === classicCakeConfig.cakeType)?.label}
+                </Text>
+              </View>
+
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Persone:</Text>
+                <Text style={styles.summaryValue}>
+                  {classicCakeConfig.numberOfPeople} ({((classicCakeConfig.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg)
+                </Text>
+              </View>
+
+              {classicCakeConfig.dedication && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Dedica:</Text>
+                  <Text style={styles.summaryValue}>&quot;{classicCakeConfig.dedication}&quot;</Text>
+                </View>
+              )}
+
+              {classicCakeConfig.photoUri && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Foto:</Text>
+                  <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+                </View>
+              )}
+
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Prezzo Dolce:</Text>
+                <Text style={styles.priceValue}>€{getClassicCakePrice().toFixed(2)}</Text>
+              </View>
+
+              <View style={styles.divider} />
+            </>
+          )}
+
+          {orderItems.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>{UI_TEXTS.checkout.additionalProducts}</Text>
+              {orderItems.map((item) => (
+                <View key={item.product.id} style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>
+                    {item.product.name} x{item.quantity}
+                  </Text>
+                  <Text style={styles.summaryValue}>
+                    €{(item.product.price * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Totale Prodotti:</Text>
+                <Text style={styles.priceValue}>€{getProductsTotal().toFixed(2)}</Text>
+              </View>
+              <View style={styles.divider} />
+            </>
+          )}
+
+          <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{UI_TEXTS.checkout.totalOrder}</Text>
-            <Text style={styles.totalValue}>€{totalPrice.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>€{getOrderTotal().toFixed(2)}</Text>
           </View>
+
           <View style={styles.depositRow}>
-            <View style={styles.depositInfo}>
-              <IconSymbol name="info.circle" size={20} color="#FFFFFF" />
-              <Text style={styles.depositText}>
-                {UI_TEXTS.checkout.depositRequired}
-              </Text>
-            </View>
-            <Text style={styles.depositValue}>€{depositAmount.toFixed(2)}</Text>
+            <Text style={styles.depositLabel}>{UI_TEXTS.checkout.depositRequired}</Text>
+            <Text style={styles.depositValue}>€{getDepositAmount().toFixed(2)}</Text>
           </View>
+
           <Text style={styles.remainingText}>
-            {UI_TEXTS.checkout.remainingText}: €{remainingAmount.toFixed(2)}
+            {UI_TEXTS.checkout.remainingText}: €{(getOrderTotal() - getDepositAmount()).toFixed(2)}
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>{UI_TEXTS.checkout.paymentMethod}</Text>
-        
-        {PAYMENT_CONFIG.paymentMethods.card.enabled && (
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              paymentMethod === 'card' && styles.paymentOptionSelected
-            ]}
-            onPress={() => setPaymentMethod('card')}
-          >
-            <View style={styles.paymentOptionContent}>
-              <IconSymbol name="creditcard" size={28} color={paymentMethod === 'card' ? colors.primary : colors.text} />
-              <View style={styles.paymentOptionText}>
-                <Text style={[
-                  styles.paymentOptionTitle,
-                  paymentMethod === 'card' && styles.paymentOptionTitleSelected
-                ]}>
-                  {PAYMENT_CONFIG.paymentMethods.card.label}
-                </Text>
-                <Text style={styles.paymentOptionDescription}>
-                  {PAYMENT_CONFIG.paymentMethods.card.description}
-                </Text>
-              </View>
-            </View>
-            {paymentMethod === 'card' && (
-              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-        )}
+        <View style={styles.paymentCard}>
+          <Text style={styles.paymentTitle}>{UI_TEXTS.checkout.paymentMethod}</Text>
+          
+          {Object.entries(PAYMENT_CONFIG.paymentMethods).map(([key, method]) => {
+            if (!method.enabled) return null;
+            
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.paymentOption,
+                  selectedPaymentMethod === key && styles.paymentOptionSelected
+                ]}
+                onPress={() => setSelectedPaymentMethod(key)}
+              >
+                <View style={styles.paymentOptionContent}>
+                  <Text style={[
+                    styles.paymentOptionLabel,
+                    selectedPaymentMethod === key && styles.paymentOptionLabelSelected
+                  ]}>
+                    {method.label}
+                  </Text>
+                  <Text style={styles.paymentOptionDescription}>
+                    {method.description}
+                  </Text>
+                </View>
+                {selectedPaymentMethod === key && (
+                  <IconSymbol name="checkmark.circle.fill" size={28} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-        {PAYMENT_CONFIG.paymentMethods.paypal.enabled && (
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              paymentMethod === 'paypal' && styles.paymentOptionSelected
-            ]}
-            onPress={() => setPaymentMethod('paypal')}
-          >
-            <View style={styles.paymentOptionContent}>
-              <IconSymbol name="dollarsign.circle" size={28} color={paymentMethod === 'paypal' ? colors.primary : colors.text} />
-              <View style={styles.paymentOptionText}>
-                <Text style={[
-                  styles.paymentOptionTitle,
-                  paymentMethod === 'paypal' && styles.paymentOptionTitleSelected
-                ]}>
-                  {PAYMENT_CONFIG.paymentMethods.paypal.label}
-                </Text>
-                <Text style={styles.paymentOptionDescription}>
-                  {PAYMENT_CONFIG.paymentMethods.paypal.description}
-                </Text>
-              </View>
-            </View>
-            {paymentMethod === 'paypal' && (
-              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-        )}
+        <View style={styles.securityInfo}>
+          <IconSymbol name="lock.shield" size={24} color={colors.primary} />
+          <Text style={styles.securityText}>{UI_TEXTS.checkout.securityInfo}</Text>
+        </View>
 
         <TouchableOpacity
-          style={[
-            styles.confirmButton,
-            !paymentMethod && styles.confirmButtonDisabled
-          ]}
+          style={[styles.confirmButton, !selectedPaymentMethod && styles.confirmButtonDisabled]}
           onPress={handlePayment}
-          disabled={!paymentMethod}
+          disabled={!selectedPaymentMethod}
         >
-          <Text style={styles.confirmButtonText}>
-            {UI_TEXTS.checkout.confirmButton} €{depositAmount.toFixed(2)}
-          </Text>
-          <IconSymbol name="lock.fill" size={20} color="#FFFFFF" />
+          <IconSymbol name="creditcard" size={24} color="#FFFFFF" />
+          <Text style={styles.confirmButtonText}>{UI_TEXTS.checkout.confirmButton}</Text>
         </TouchableOpacity>
-
-        <View style={styles.infoBox}>
-          <IconSymbol name="info.circle" size={24} color={colors.primary} />
-          <Text style={styles.infoText}>
-            {UI_TEXTS.checkout.securityInfo}
-          </Text>
-        </View>
       </ScrollView>
     </>
   );
@@ -231,168 +276,174 @@ const styles = StyleSheet.create({
   contentContainerWithTabBar: {
     paddingBottom: 120,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  emoji: {
-    fontSize: 50,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  card: {
+  summaryCard: {
     backgroundColor: colors.card,
     borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 20,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
     elevation: 4,
   },
-  cardTitle: {
+  summaryTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 20,
+  },
+  sectionLabel: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
+    color: colors.primary,
+    marginTop: 8,
+    marginBottom: 12,
   },
-  row: {
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 10,
   },
-  itemLabel: {
+  summaryLabel: {
     fontSize: 15,
     color: colors.textSecondary,
-  },
-  itemValue: {
-    fontSize: 15,
     fontWeight: '600',
+  },
+  summaryValue: {
+    fontSize: 15,
     color: colors.text,
+    flex: 1,
+    textAlign: 'right',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  priceLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.secondary,
   },
   divider: {
     height: 1,
     backgroundColor: colors.highlight,
-    marginVertical: 12,
+    marginVertical: 16,
   },
-  priceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  priceValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  totalCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    boxShadow: '0px 4px 12px rgba(233, 30, 99, 0.3)',
-    elevation: 4,
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    marginBottom: 12,
   },
   totalLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
   },
   totalValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.primary,
   },
   depositRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.highlight,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
-  depositInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  depositText: {
+  depositLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: '700',
+    color: colors.text,
   },
   depositValue: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.primary,
   },
   remainingText: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 8,
+    fontSize: 14,
+    color: colors.textSecondary,
     textAlign: 'center',
+    marginTop: 8,
   },
-  sectionTitle: {
+  paymentCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
+  },
+  paymentTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 16,
   },
   paymentOption: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
-    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
-    elevation: 2,
+    borderColor: colors.background,
+    marginBottom: 12,
+    backgroundColor: colors.background,
   },
   paymentOptionSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.highlight,
   },
   paymentOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
     flex: 1,
   },
-  paymentOptionText: {
-    flex: 1,
-  },
-  paymentOptionTitle: {
+  paymentOptionLabel: {
     fontSize: 16,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
   },
-  paymentOptionTitleSelected: {
+  paymentOptionLabelSelected: {
     color: colors.primary,
   },
   paymentOptionDescription: {
     fontSize: 13,
     color: colors.textSecondary,
   },
+  securityInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
+    elevation: 2,
+  },
+  securityText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   confirmButton: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 24,
-    marginBottom: 16,
-    boxShadow: '0px 4px 12px rgba(156, 39, 176, 0.3)',
+    gap: 12,
+    boxShadow: '0px 4px 12px rgba(233, 30, 99, 0.3)',
     elevation: 4,
   },
   confirmButtonDisabled: {
@@ -403,21 +454,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  infoBox: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
   },
 });

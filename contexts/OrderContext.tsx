@@ -1,18 +1,22 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CakeConfiguration, OrderItem, Product } from '@/types/order';
+import { CakeConfiguration, ClassicCakeConfiguration, OrderItem, Product } from '@/types/order';
 import { CAKE_PRICING, CAKE_FINITURA_CONFIG, CAKE_VARIEGATURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
 
 interface OrderContextType {
   cakeConfig: CakeConfiguration;
   updateCakeConfig: (updates: Partial<CakeConfiguration>) => void;
   resetCakeConfig: () => void;
+  classicCakeConfig: ClassicCakeConfiguration;
+  updateClassicCakeConfig: (updates: Partial<ClassicCakeConfiguration>) => void;
+  resetClassicCakeConfig: () => void;
   orderItems: OrderItem[];
   addProduct: (product: Product) => void;
   removeProduct: (productId: string) => void;
   getProductQuantity: (productId: string) => number;
   clearProducts: () => void;
   getCakePrice: () => number;
+  getClassicCakePrice: () => number;
   getProductsTotal: () => number;
   getOrderTotal: () => number;
   getDepositAmount: () => number;
@@ -25,9 +29,17 @@ const initialCakeConfig: CakeConfiguration = {
   base: null,
   cream: null,
   meringaFilling: null,
+  condimento: 'nessuno',
   variegatura: 'nessuna',
   finitura: 'panna_normale',
   lactoseFree: 'con_lattosio',
+  numberOfPeople: CAKE_PRICING.defaultPeople,
+  dedication: '',
+  photoUri: null,
+};
+
+const initialClassicCakeConfig: ClassicCakeConfiguration = {
+  cakeType: null,
   numberOfPeople: CAKE_PRICING.defaultPeople,
   dedication: '',
   photoUri: null,
@@ -43,6 +55,7 @@ export function useOrder() {
 
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [cakeConfig, setCakeConfig] = useState<CakeConfiguration>(initialCakeConfig);
+  const [classicCakeConfig, setClassicCakeConfig] = useState<ClassicCakeConfiguration>(initialClassicCakeConfig);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const updateCakeConfig = (updates: Partial<CakeConfiguration>) => {
@@ -51,6 +64,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const resetCakeConfig = () => {
     setCakeConfig(initialCakeConfig);
+  };
+
+  const updateClassicCakeConfig = (updates: Partial<ClassicCakeConfiguration>) => {
+    setClassicCakeConfig(prev => ({ ...prev, ...updates }));
+  };
+
+  const resetClassicCakeConfig = () => {
+    setClassicCakeConfig(initialClassicCakeConfig);
   };
 
   const addProduct = (product: Product) => {
@@ -123,6 +144,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     return totalPrice;
   };
 
+  const getClassicCakePrice = (): number => {
+    // Calcolo base: peso totale * prezzo al kg
+    const totalWeightKg = (classicCakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson) / 1000;
+    let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
+    
+    // Aggiungi sovraprezzo foto se presente
+    if (classicCakeConfig.photoUri) {
+      totalPrice += CAKE_PRICING.photoSurcharge;
+    }
+    
+    return totalPrice;
+  };
+
   const getProductsTotal = (): number => {
     return orderItems.reduce((total, item) => {
       return total + (item.product.price * item.quantity);
@@ -130,7 +164,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   };
 
   const getOrderTotal = (): number => {
-    return getCakePrice() + getProductsTotal();
+    let total = getProductsTotal();
+    
+    // Aggiungi il prezzo del dolce personalizzato se configurato
+    if (cakeConfig.base) {
+      total += getCakePrice();
+    }
+    
+    // Aggiungi il prezzo del dolce classico se configurato
+    if (classicCakeConfig.cakeType) {
+      total += getClassicCakePrice();
+    }
+    
+    return total;
   };
 
   const getDepositAmount = (): number => {
@@ -139,6 +185,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const clearOrder = () => {
     resetCakeConfig();
+    resetClassicCakeConfig();
     clearProducts();
   };
 
@@ -148,12 +195,16 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         cakeConfig,
         updateCakeConfig,
         resetCakeConfig,
+        classicCakeConfig,
+        updateClassicCakeConfig,
+        resetClassicCakeConfig,
         orderItems,
         addProduct,
         removeProduct,
         getProductQuantity,
         clearProducts,
         getCakePrice,
+        getClassicCakePrice,
         getProductsTotal,
         getOrderTotal,
         getDepositAmount,

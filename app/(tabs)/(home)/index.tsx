@@ -63,7 +63,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={styles.mainCard}
-          onPress={() => router.push('/(tabs)/(home)/products')}
+          onPress={() => router.push('/(tabs)/(home)/classic-cake')}
         >
           <View style={[styles.cardIcon, { backgroundColor: colors.secondary }]}>
             <IconSymbol name="cake" size={40} color="#FFFFFF" />

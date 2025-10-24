@@ -5,14 +5,38 @@ export type MeringaFilling = 'frutta' | 'panna_e_cioccolato' | 'fragole_e_gocce_
 export type CakeVariegatura = 'nessuna' | 'cioccolato' | 'cioccolato_bianco' | 'pistacchio';
 export type CakeFinitura = 'panna_normale' | 'panna_rosa' | 'panna_gialla' | 'panna_verde' | 'panna_azzurra' | 'panna_lilla' | 'panna_arancione' | 'panna_viola' | 'panna_cioccolato';
 export type CakeLactoseFree = 'con_lattosio' | 'senza_lattosio';
+export type CakeCondimento = 'nessuno' | 'frutta_mista' | 'fragole' | 'gocce_cioccolato' | 'granella_nocciole' | 'granella_pistacchio' | 'scagliette_cioccolato_bianco';
 
 export interface CakeConfiguration {
   base: CakeBase | null;
   cream: CakeCream | null;
   meringaFilling: MeringaFilling | null;
+  condimento: CakeCondimento;
   variegatura: CakeVariegatura;
   finitura: CakeFinitura;
   lactoseFree: CakeLactoseFree;
+  numberOfPeople: number;
+  dedication: string;
+  photoUri: string | null;
+}
+
+export type ClassicCakeType = 
+  | 'millefoglie'
+  | 'dolce_del_re'
+  | 'dolce_alle_creme'
+  | 'tiramisu'
+  | 'dolce_al_limone'
+  | 'dolce_ai_frutti_di_bosco'
+  | 'crostata_di_frutta'
+  | 'crostata_al_cioccolato'
+  | 'sant_honore'
+  | 'profitterole'
+  | 'meringata_alla_frutta'
+  | 'meringata_al_cioccolato'
+  | 'dolce_al_pistacchio';
+
+export interface ClassicCakeConfiguration {
+  cakeType: ClassicCakeType | null;
   numberOfPeople: number;
   dedication: string;
   photoUri: string | null;
@@ -34,6 +58,7 @@ export interface OrderItem {
 
 export interface Order {
   cakeConfig: CakeConfiguration;
+  classicCakeConfig: ClassicCakeConfiguration;
   additionalItems: OrderItem[];
   totalPrice: number;
   depositAmount: number;
