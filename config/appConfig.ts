@@ -60,6 +60,9 @@ export const CAKE_PRICING = {
   
   // Numero predefinito di persone
   defaultPeople: 4,
+  
+  // Sovraprezzo per foto sul dolce (€)
+  photoSurcharge: 8,
 };
 
 // ============================================
@@ -141,6 +144,32 @@ export const CAKE_CREAMS_CONFIG = [
     label: 'Nocciola',
     description: 'Intensa e vellutata',
     imageUrl: 'https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=400',
+  },
+];
+
+// ============================================
+// OPZIONI DOLCI - RIPIENI PER MERINGA
+// ============================================
+export const MERINGA_FILLINGS_CONFIG = [
+  {
+    value: 'frutta',
+    label: 'Frutta',
+    description: 'Fresca e leggera',
+  },
+  {
+    value: 'panna_e_cioccolato',
+    label: 'Panna e Cioccolato',
+    description: 'Classica e golosa',
+  },
+  {
+    value: 'fragole_e_gocce_cioccolato',
+    label: 'Fragole e Gocce di Cioccolato',
+    description: 'Dolce e croccante',
+  },
+  {
+    value: 'limone',
+    label: 'Limone',
+    description: 'Fresco e agrumato',
   },
 ];
 
@@ -268,11 +297,13 @@ export const UI_TEXTS = {
   home: {
     createCakeTitle: 'Crea il Tuo Dolce',
     createCakeDescription: 'Personalizza base, crema, dimensione e dedica',
+    chooseCakeTitle: 'Scegli il Tuo Dolce',
+    chooseCakeDescription: 'Scopri i nostri dolci classici già composti',
     productsTitle: 'Altri Prodotti',
-    productsDescription: 'Scopri la nostra selezione di dolci artigianali',
+    productsDescription: 'Candeline, contenitori termici e accessori',
     howItWorksTitle: 'Come Funziona',
     steps: [
-      'Configura il tuo dolce personalizzato',
+      'Configura il tuo dolce personalizzato o scegli un dolce classico',
       'Aggiungi altri prodotti se desideri',
       'Paga il 50% come acconto alla conferma',
       'Ritira il tuo ordine in pasticceria',
@@ -283,13 +314,14 @@ export const UI_TEXTS = {
     title: 'Personalizza il Tuo Dolce',
     chooseBase: 'Scegli la Base',
     chooseCream: 'Scegli la Crema',
+    chooseMeringaFilling: 'Scegli il Ripieno per Meringa',
     chooseVariegatura: 'Variegatura con Creme Spalmabili',
     chooseFinitura: 'Finitura',
     chooseLactoseFree: 'Opzione Senza Lattosio',
     numberOfPeople: 'Numero di Persone',
     dedication: 'Dedica sul Dolce',
     dedicationPlaceholder: 'Es: Buon Compleanno Maria!',
-    photo: 'Foto sul Dolce (Opzionale)',
+    photo: 'Foto sul Dolce (+8€)',
     addPhoto: 'Aggiungi Foto',
     changePhoto: 'Cambia Foto',
     preview: 'Riepilogo Dolce',
@@ -382,7 +414,7 @@ export const MESSAGES = {
     permissionDenied: 'Permesso Negato',
     permissionDeniedDescription: 'È necessario il permesso per accedere alla galleria',
     incompleteConfiguration: 'Configurazione Incompleta',
-    incompleteConfigurationDescription: 'Seleziona base e crema per continuare',
+    incompleteConfigurationDescription: 'Seleziona base e crema/ripieno per continuare',
     selectPaymentMethod: 'Seleziona Metodo di Pagamento',
     selectPaymentMethodDescription: 'Scegli come vuoi pagare l\'acconto',
   },
@@ -405,6 +437,7 @@ export default {
   PAYMENT_CONFIG,
   CAKE_BASES_CONFIG,
   CAKE_CREAMS_CONFIG,
+  MERINGA_FILLINGS_CONFIG,
   CAKE_VARIEGATURA_CONFIG,
   CAKE_FINITURA_CONFIG,
   CAKE_LACTOSE_FREE_CONFIG,

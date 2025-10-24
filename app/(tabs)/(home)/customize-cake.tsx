@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert,
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '@/styles/commonStyles';
-import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, GRAMS_PER_PERSON } from '@/types/order';
+import { CakeConfiguration, CAKE_BASES, CAKE_CREAMS, MERINGA_FILLINGS, GRAMS_PER_PERSON } from '@/types/order';
 import OptionSelector from '@/components/OptionSelector';
 import { IconSymbol } from '@/components/IconSymbol';
 import { UI_TEXTS, MESSAGES, DEDICATION_CONFIG, PHOTO_CONFIG, CAKE_PRICING, CAKE_VARIEGATURA_CONFIG, CAKE_FINITURA_CONFIG, CAKE_LACTOSE_FREE_CONFIG } from '@/config/appConfig';
@@ -18,8 +18,25 @@ export default function CustomizeCakeScreen() {
 
   const updateConfig = (updates: Partial<CakeConfiguration>) => {
     const newConfig = { ...config, ...updates };
+    
+    // Se cambia la base, resetta cream o meringaFilling appropriatamente
+    if (updates.base !== undefined) {
+      if (updates.base === 'meringa') {
+        newConfig.cream = null;
+        newConfig.variegatura = 'nessuna';
+        if (!newConfig.meringaFilling) {
+          newConfig.meringaFilling = null;
+        }
+      } else {
+        newConfig.meringaFilling = null;
+        if (!newConfig.cream) {
+          newConfig.cream = null;
+        }
+      }
+    }
+    
     setConfig(newConfig);
-    updateCakeConfig(updates);
+    updateCakeConfig(newConfig);
   };
 
   const pickImage = async () => {
@@ -50,7 +67,9 @@ export default function CustomizeCakeScreen() {
     }
   };
 
-  const canProceed = config.base && config.cream && config.numberOfPeople > 0;
+  const isMeringa = config.base === 'meringa';
+  const canProceed = config.base && config.numberOfPeople > 0 && 
+    (isMeringa ? config.meringaFilling : config.cream);
 
   const handleContinue = () => {
     if (!canProceed) {
@@ -70,19 +89,21 @@ export default function CustomizeCakeScreen() {
   };
 
   const renderSummary = () => {
-    if (!config.base && !config.cream) return null;
+    if (!config.base && !config.cream && !config.meringaFilling) return null;
 
     const totalWeightKg = (config.numberOfPeople * GRAMS_PER_PERSON) / 1000;
     const basePrice = totalWeightKg * CAKE_PRICING.pricePerKg;
     
     const variegaturaOption = CAKE_VARIEGATURA_CONFIG.find(v => v.value === config.variegatura);
-    const variegaturaPrice = variegaturaOption?.price || 0;
+    const variegaturaPrice = (!isMeringa && variegaturaOption?.price) || 0;
     
     const finituraOption = CAKE_FINITURA_CONFIG.find(f => f.value === config.finitura);
     const finituraPrice = finituraOption?.price || 0;
     
     const lactoseFreeOption = CAKE_LACTOSE_FREE_CONFIG.find(l => l.value === config.lactoseFree);
     const lactoseFreePrice = lactoseFreeOption?.price || 0;
+    
+    const photoPrice = config.photoUri ? CAKE_PRICING.photoSurcharge : 0;
 
     return (
       <View style={styles.summaryCard}>
@@ -97,7 +118,16 @@ export default function CustomizeCakeScreen() {
           </View>
         )}
         
-        {config.cream && (
+        {isMeringa && config.meringaFilling && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Ripieno:</Text>
+            <Text style={styles.summaryValue}>
+              {MERINGA_FILLINGS.find(f => f.value === config.meringaFilling)?.label}
+            </Text>
+          </View>
+        )}
+        
+        {!isMeringa && config.cream && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Crema:</Text>
             <Text style={styles.summaryValue}>
@@ -106,7 +136,7 @@ export default function CustomizeCakeScreen() {
           </View>
         )}
         
-        {config.variegatura !== 'nessuna' && (
+        {!isMeringa && config.variegatura !== 'nessuna' && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Variegatura:</Text>
             <Text style={styles.summaryValue}>
@@ -150,7 +180,7 @@ export default function CustomizeCakeScreen() {
         {config.photoUri && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Foto:</Text>
-            <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+            <Text style={styles.summaryValue}>✓ Aggiunta (+€{photoPrice.toFixed(2)})</Text>
           </View>
         )}
         
@@ -166,6 +196,7 @@ export default function CustomizeCakeScreen() {
           {variegaturaPrice > 0 && ` + Variegatura: €${variegaturaPrice.toFixed(2)}`}
           {finituraPrice > 0 && ` + Finitura: €${finituraPrice.toFixed(2)}`}
           {lactoseFreePrice > 0 && ` + Senza Lattosio: €${lactoseFreePrice.toFixed(2)}`}
+          {photoPrice > 0 && ` + Foto: €${photoPrice.toFixed(2)}`}
         </Text>
       </View>
     );
@@ -198,37 +229,51 @@ export default function CustomizeCakeScreen() {
           onSelect={(value) => updateConfig({ base: value as any })}
         />
 
-        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCream}</Text>
-        <OptionSelector
-          title=""
-          options={CAKE_CREAMS}
-          selectedValue={config.cream}
-          onSelect={(value) => updateConfig({ cream: value as any })}
-        />
+        {isMeringa ? (
+          <>
+            <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseMeringaFilling}</Text>
+            <OptionSelector
+              title=""
+              options={MERINGA_FILLINGS}
+              selectedValue={config.meringaFilling}
+              onSelect={(value) => updateConfig({ meringaFilling: value as any })}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCream}</Text>
+            <OptionSelector
+              title=""
+              options={CAKE_CREAMS}
+              selectedValue={config.cream}
+              onSelect={(value) => updateConfig({ cream: value as any })}
+            />
 
-        <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseVariegatura}</Text>
-        <View style={styles.optionsGrid}>
-          {CAKE_VARIEGATURA_CONFIG.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionCard,
-                config.variegatura === option.value && styles.optionCardSelected
-              ]}
-              onPress={() => updateConfig({ variegatura: option.value as any })}
-            >
-              <Text style={[
-                styles.optionLabel,
-                config.variegatura === option.value && styles.optionLabelSelected
-              ]}>
-                {option.label}
-              </Text>
-              {option.price > 0 && (
-                <Text style={styles.optionPrice}>+€{option.price.toFixed(2)}</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+            <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseVariegatura}</Text>
+            <View style={styles.optionsGrid}>
+              {CAKE_VARIEGATURA_CONFIG.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.optionCard,
+                    config.variegatura === option.value && styles.optionCardSelected
+                  ]}
+                  onPress={() => updateConfig({ variegatura: option.value as any })}
+                >
+                  <Text style={[
+                    styles.optionLabel,
+                    config.variegatura === option.value && styles.optionLabelSelected
+                  ]}>
+                    {option.label}
+                  </Text>
+                  {option.price > 0 && (
+                    <Text style={styles.optionPrice}>+€{option.price.toFixed(2)}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseFinitura}</Text>
         <View style={styles.optionsGrid}>
@@ -335,6 +380,7 @@ export default function CustomizeCakeScreen() {
           <Text style={styles.photoButtonText}>
             {config.photoUri ? UI_TEXTS.customizeCake.changePhoto : UI_TEXTS.customizeCake.addPhoto}
           </Text>
+          <Text style={styles.photoSurcharge}>+€{CAKE_PRICING.photoSurcharge.toFixed(2)}</Text>
         </TouchableOpacity>
 
         {renderSummary()}
@@ -526,6 +572,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.primary,
+  },
+  photoSurcharge: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.secondary,
   },
   summaryCard: {
     backgroundColor: colors.card,

@@ -66,6 +66,22 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/(home)/products')}
         >
           <View style={[styles.cardIcon, { backgroundColor: colors.secondary }]}>
+            <IconSymbol name="cake" size={40} color="#FFFFFF" />
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>{UI_TEXTS.home.chooseCakeTitle}</Text>
+            <Text style={styles.cardDescription}>
+              {UI_TEXTS.home.chooseCakeDescription}
+            </Text>
+          </View>
+          <IconSymbol name="chevron.right" size={24} color={colors.textSecondary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.mainCard}
+          onPress={() => router.push('/(tabs)/(home)/products')}
+        >
+          <View style={[styles.cardIcon, { backgroundColor: colors.accent }]}>
             <IconSymbol name="cart" size={40} color="#FFFFFF" />
           </View>
           <View style={styles.cardContent}>

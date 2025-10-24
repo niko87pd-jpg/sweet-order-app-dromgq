@@ -24,6 +24,7 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 const initialCakeConfig: CakeConfiguration = {
   base: null,
   cream: null,
+  meringaFilling: null,
   variegatura: 'nessuna',
   finitura: 'panna_normale',
   lactoseFree: 'con_lattosio',
@@ -94,10 +95,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const totalWeightKg = (cakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson) / 1000;
     let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
     
-    // Aggiungi costo variegatura se presente
-    const variegaturaOption = CAKE_VARIEGATURA_CONFIG.find(v => v.value === cakeConfig.variegatura);
-    if (variegaturaOption && variegaturaOption.price > 0) {
-      totalPrice += variegaturaOption.price;
+    // Aggiungi costo variegatura se presente (solo per non-meringa)
+    if (cakeConfig.base !== 'meringa') {
+      const variegaturaOption = CAKE_VARIEGATURA_CONFIG.find(v => v.value === cakeConfig.variegatura);
+      if (variegaturaOption && variegaturaOption.price > 0) {
+        totalPrice += variegaturaOption.price;
+      }
     }
     
     // Aggiungi costo finitura se presente
@@ -110,6 +113,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const lactoseFreeOption = CAKE_LACTOSE_FREE_CONFIG.find(l => l.value === cakeConfig.lactoseFree);
     if (lactoseFreeOption && lactoseFreeOption.price > 0) {
       totalPrice += lactoseFreeOption.price;
+    }
+    
+    // Aggiungi sovraprezzo foto se presente
+    if (cakeConfig.photoUri) {
+      totalPrice += CAKE_PRICING.photoSurcharge;
     }
     
     return totalPrice;
