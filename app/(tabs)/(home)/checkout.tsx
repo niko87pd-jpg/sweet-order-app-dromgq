@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
-import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG, CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, MERINGA_FILLINGS_CONFIG, CLASSIC_CAKES_CONFIG, GRAMS_PER_PERSON } from '@/config/appConfig';
+import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG, CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, MERINGA_FILLINGS_CONFIG, CLASSIC_CAKES_CONFIG, GRAMS_PER_PERSON, PASTRY_INFO } from '@/config/appConfig';
 import { useOrder } from '@/contexts/OrderContext';
 
 export default function CheckoutScreen() {
@@ -30,21 +30,51 @@ export default function CheckoutScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(pickupDate || new Date());
+  const [tempTime, setTempTime] = useState(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 25); // Default to 25 hours from now
+    return now;
+  });
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (event.type === 'dismissed') {
+      setShowDatePicker(false);
+      return;
+    }
+    
     if (selectedDate) {
       setTempDate(selectedDate);
       setPickupDate(selectedDate);
+      if (Platform.OS === 'android') {
+        // On Android, close the picker after selection
+        setShowDatePicker(false);
+      }
     }
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios');
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    
+    if (event.type === 'dismissed') {
+      setShowTimePicker(false);
+      return;
+    }
+    
     if (selectedTime) {
+      setTempTime(selectedTime);
       const hours = selectedTime.getHours().toString().padStart(2, '0');
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       setPickupTime(`${hours}:${minutes}`);
+      if (Platform.OS === 'android') {
+        // On Android, close the picker after selection
+        setShowTimePicker(false);
+      }
     }
   };
 
@@ -105,6 +135,31 @@ export default function CheckoutScreen() {
         },
       ]
     );
+  };
+
+  const handleOpenMap = () => {
+    const address = encodeURIComponent(PASTRY_INFO.address);
+    const label = encodeURIComponent(PASTRY_INFO.name);
+    
+    let url = '';
+    if (Platform.OS === 'ios') {
+      url = `maps://app?daddr=${address}&dirflg=d`;
+    } else {
+      url = `google.navigation:q=${address}`;
+    }
+    
+    // Fallback to web maps if native app is not available
+    const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${address}`;
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Linking.openURL(webUrl);
+      }
+    }).catch(() => {
+      Linking.openURL(webUrl);
+    });
   };
 
   const hasCustomCake = cakeConfig.base !== null;
@@ -323,20 +378,40 @@ export default function CheckoutScreen() {
           <DateTimePicker
             value={tempDate}
             mode="date"
-            display="default"
+            display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
             onChange={handleDateChange}
             minimumDate={new Date()}
+            locale="it-IT"
           />
         )}
 
         {showTimePicker && (
           <DateTimePicker
-            value={tempDate}
+            value={tempTime}
             mode="time"
-            display="default"
+            display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
             onChange={handleTimeChange}
+            locale="it-IT"
+            is24Hour={true}
           />
         )}
+
+        <View style={styles.mapCard}>
+          <Text style={styles.mapTitle}>Dove Siamo</Text>
+          <View style={styles.mapPlaceholder}>
+            <IconSymbol name="map" size={48} color={colors.primary} />
+            <Text style={styles.mapText}>{PASTRY_INFO.name}</Text>
+            <Text style={styles.mapAddress}>{PASTRY_INFO.address}</Text>
+            <Text style={styles.mapNote}>
+              Nota: Le mappe interattive non sono supportate su web in Natively.
+              {'\n'}Usa il pulsante qui sotto per aprire il navigatore.
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.navigationButton} onPress={handleOpenMap}>
+            <IconSymbol name="location.fill" size={24} color="#FFFFFF" />
+            <Text style={styles.navigationButtonText}>Avvia Navigatore</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.paymentCard}>
           <Text style={styles.paymentTitle}>{UI_TEXTS.checkout.paymentMethod}</Text>
@@ -553,6 +628,63 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text,
     fontWeight: '600',
+  },
+  mapCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
+  },
+  mapTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  mapPlaceholder: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 16,
+    minHeight: 200,
+    justifyContent: 'center',
+  },
+  mapText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  mapAddress: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  mapNote: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 12,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  navigationButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  navigationButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   paymentCard: {
     backgroundColor: colors.card,

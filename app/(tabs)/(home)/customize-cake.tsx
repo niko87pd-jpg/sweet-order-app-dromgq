@@ -20,23 +20,18 @@ export default function CustomizeCakeScreen() {
     const newConfig = { ...config, ...updates };
     
     // Se cambia la base, resetta cream o meringaFilling appropriatamente
-    if (updates.base !== undefined) {
+    if (updates.base !== undefined && updates.base !== config.base) {
       if (updates.base === 'meringa') {
+        // Passando a meringa: resetta le creme e mantieni meringaFilling
         newConfig.cream = null;
         newConfig.creamFirstLayer = null;
         newConfig.creamSecondLayer = null;
         newConfig.variegatura = 'nessuna';
-        if (!newConfig.meringaFilling) {
-          newConfig.meringaFilling = null;
-        }
+        // Non resettare meringaFilling se già presente
       } else {
+        // Passando da meringa a altro: resetta meringaFilling e mantieni creme
         newConfig.meringaFilling = null;
-        if (!newConfig.creamFirstLayer) {
-          newConfig.creamFirstLayer = null;
-        }
-        if (!newConfig.creamSecondLayer) {
-          newConfig.creamSecondLayer = null;
-        }
+        // Non resettare creamFirstLayer e creamSecondLayer se già presenti
       }
     }
 

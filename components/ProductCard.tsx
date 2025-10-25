@@ -15,7 +15,17 @@ interface ProductCardProps {
 export default function ProductCard({ product, quantity, onAdd, onRemove }: ProductCardProps) {
   return (
     <View style={styles.container}>
-      <Image source={{ uri: product.imageUrl }} style={styles.image} />
+      {product.imageUrl ? (
+        <Image 
+          source={{ uri: product.imageUrl }} 
+          style={styles.image}
+          defaultSource={require('@/assets/images/final_quest_240x240.png')}
+        />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <IconSymbol name="photo" size={32} color={colors.textSecondary} />
+        </View>
+      )}
       <View style={styles.content}>
         <Text style={styles.name}>{product.name}</Text>
         <Text style={styles.description}>{product.description}</Text>
@@ -58,6 +68,16 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
+    backgroundColor: colors.background,
+  },
+  imagePlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
