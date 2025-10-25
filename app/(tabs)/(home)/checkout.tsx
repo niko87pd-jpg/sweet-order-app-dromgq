@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG, CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, MERINGA_FILLINGS_CONFIG, CLASSIC_CAKES_CONFIG, GRAMS_PER_PERSON } from '@/config/appConfig';
@@ -18,10 +19,47 @@ export default function CheckoutScreen() {
     getProductsTotal, 
     getOrderTotal, 
     getDepositAmount,
-    clearOrder 
+    clearOrder,
+    pickupDate,
+    pickupTime,
+    setPickupDate,
+    setPickupTime,
   } = useOrder();
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(pickupDate || new Date());
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setTempDate(selectedDate);
+      setPickupDate(selectedDate);
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedTime) {
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setPickupTime(`${hours}:${minutes}`);
+    }
+  };
+
+  const isValidPickupDateTime = (): boolean => {
+    if (!pickupDate || !pickupTime) return false;
+    
+    const [hours, minutes] = pickupTime.split(':').map(Number);
+    const pickupDateTime = new Date(pickupDate);
+    pickupDateTime.setHours(hours, minutes, 0, 0);
+    
+    const now = new Date();
+    const minPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+    
+    return pickupDateTime >= minPickupTime;
+  };
 
   const handlePayment = () => {
     if (!selectedPaymentMethod) {
@@ -32,9 +70,27 @@ export default function CheckoutScreen() {
       return;
     }
 
+    if (!pickupDate || !pickupTime) {
+      Alert.alert(
+        MESSAGES.errors.selectPickupDateTime,
+        MESSAGES.errors.selectPickupDateTimeDescription
+      );
+      return;
+    }
+
+    if (!isValidPickupDateTime()) {
+      Alert.alert(
+        MESSAGES.errors.minimumNoticeRequired,
+        MESSAGES.errors.minimumNoticeRequiredDescription
+      );
+      return;
+    }
+
     console.log('Processing payment with method:', selectedPaymentMethod);
     console.log('Order total:', getOrderTotal());
     console.log('Deposit amount:', getDepositAmount());
+    console.log('Pickup date:', pickupDate);
+    console.log('Pickup time:', pickupTime);
 
     Alert.alert(
       MESSAGES.success.paymentSimulated,
@@ -53,6 +109,16 @@ export default function CheckoutScreen() {
 
   const hasCustomCake = cakeConfig.base !== null;
   const hasClassicCake = classicCakeConfig.cakeType !== null;
+
+  const formatDate = (date: Date | null): string => {
+    if (!date) return 'Seleziona data';
+    return date.toLocaleDateString('it-IT', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   return (
     <>
@@ -96,13 +162,21 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              {cakeConfig.base !== 'meringa' && cakeConfig.cream && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Crema:</Text>
-                  <Text style={styles.summaryValue}>
-                    {CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.cream)?.label}
-                  </Text>
-                </View>
+              {cakeConfig.base !== 'meringa' && cakeConfig.creamFirstLayer && (
+                <>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Crema Primo Strato:</Text>
+                    <Text style={styles.summaryValue}>
+                      {CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.creamFirstLayer)?.label}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Crema Secondo Strato:</Text>
+                    <Text style={styles.summaryValue}>
+                      {CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.creamSecondLayer)?.label}
+                    </Text>
+                  </View>
+                </>
               )}
 
               <View style={styles.summaryRow}>
@@ -212,6 +286,58 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
+        <View style={styles.dateTimeCard}>
+          <Text style={styles.dateTimeTitle}>{UI_TEXTS.checkout.pickupDateTime}</Text>
+          
+          <TouchableOpacity 
+            style={styles.dateTimeButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <IconSymbol name="calendar" size={24} color={colors.primary} />
+            <View style={styles.dateTimeContent}>
+              <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectDate}</Text>
+              <Text style={styles.dateTimeValue}>{formatDate(pickupDate)}</Text>
+            </View>
+            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.dateTimeButton}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <IconSymbol name="clock" size={24} color={colors.primary} />
+            <View style={styles.dateTimeContent}>
+              <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectTime}</Text>
+              <Text style={styles.dateTimeValue}>{pickupTime || 'Seleziona orario'}</Text>
+            </View>
+            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <View style={styles.noticeBox}>
+            <IconSymbol name="info.circle" size={20} color={colors.secondary} />
+            <Text style={styles.noticeText}>{UI_TEXTS.checkout.minimumNotice}</Text>
+          </View>
+        </View>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={tempDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            minimumDate={new Date()}
+          />
+        )}
+
+        {showTimePicker && (
+          <DateTimePicker
+            value={tempDate}
+            mode="time"
+            display="default"
+            onChange={handleTimeChange}
+          />
+        )}
+
         <View style={styles.paymentCard}>
           <Text style={styles.paymentTitle}>{UI_TEXTS.checkout.paymentMethod}</Text>
           
@@ -252,9 +378,12 @@ export default function CheckoutScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.confirmButton, !selectedPaymentMethod && styles.confirmButtonDisabled]}
+          style={[
+            styles.confirmButton, 
+            (!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime()) && styles.confirmButtonDisabled
+          ]}
           onPress={handlePayment}
-          disabled={!selectedPaymentMethod}
+          disabled={!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime()}
         >
           <IconSymbol name="creditcard" size={24} color="#FFFFFF" />
           <Text style={styles.confirmButtonText}>{UI_TEXTS.checkout.confirmButton}</Text>
@@ -373,6 +502,57 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
+  },
+  dateTimeCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
+  },
+  dateTimeTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  dateTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    marginBottom: 12,
+  },
+  dateTimeContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  dateTimeLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  dateTimeValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  noticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.highlight,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 8,
+  },
+  noticeText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '600',
   },
   paymentCard: {
     backgroundColor: colors.card,

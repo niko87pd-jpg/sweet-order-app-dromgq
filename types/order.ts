@@ -1,5 +1,5 @@
 
-export type CakeBase = 'pasta_sfoglia' | 'pasta_frolla' | 'meringa' | 'pan_di_spagna';
+export type CakeBase = 'pasta_sfoglia' | 'pasta_frolla' | 'meringa' | 'pan_di_spagna' | 'pan_di_spagna_cioccolato';
 export type CakeCream = 'chantilly' | 'cioccolato' | 'pistacchio' | 'nocciola';
 export type MeringaFilling = 'frutta' | 'panna_e_cioccolato' | 'fragole_e_gocce_cioccolato' | 'limone';
 export type CakeVariegatura = 'nessuna' | 'cioccolato' | 'cioccolato_bianco' | 'pistacchio';
@@ -10,6 +10,8 @@ export type CakeCondimento = 'nessuno' | 'frutta_mista' | 'fragole' | 'gocce_cio
 export interface CakeConfiguration {
   base: CakeBase | null;
   cream: CakeCream | null;
+  creamFirstLayer: CakeCream | null;
+  creamSecondLayer: CakeCream | null;
   meringaFilling: MeringaFilling | null;
   condimento: CakeCondimento;
   variegatura: CakeVariegatura;
@@ -62,6 +64,15 @@ export interface Order {
   additionalItems: OrderItem[];
   totalPrice: number;
   depositAmount: number;
+  pickupDate?: Date;
+  pickupTime?: string;
+}
+
+export interface UserRegistration {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
 }
 
 // Importa le configurazioni dal file di config

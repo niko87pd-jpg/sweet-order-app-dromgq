@@ -25,7 +25,7 @@ export const PASTRY_INFO = {
   
   // Informazioni di contatto
   phone: '3479200940',
-  email: 'info@pasticceriaduemondi.it',
+  email: 'pasticceriaduemondi87@gmail.com',
   address: 'Via Mattei 20, Maserà di Padova (PD)',
   
   // Orari di apertura
@@ -63,6 +63,9 @@ export const CAKE_PRICING = {
   
   // Sovraprezzo per foto sul dolce (€)
   photoSurcharge: 8,
+  
+  // Sovraprezzo per due creme diverse (€)
+  differentCreamsSurcharge: 3,
 };
 
 // ============================================
@@ -114,6 +117,12 @@ export const CAKE_BASES_CONFIG = [
     label: 'Pan di Spagna',
     description: 'Soffice e classico',
     imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=400',
+  },
+  {
+    value: 'pan_di_spagna_cioccolato',
+    label: 'Pan di Spagna al Cioccolato',
+    description: 'Soffice e goloso',
+    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
   },
 ];
 
@@ -332,7 +341,7 @@ export const CAKE_LACTOSE_FREE_CONFIG = [
   },
   {
     value: 'senza_lattosio',
-    label: 'Senza Lattosio',
+    label: 'Opzione Crema Senza Lattosio',
     description: '+10€',
     price: 10,
   },
@@ -444,7 +453,7 @@ export const UI_TEXTS = {
     chooseCondimento: 'Condimento',
     chooseVariegatura: 'Variegatura con Creme Spalmabili',
     chooseFinitura: 'Finitura',
-    chooseLactoseFree: 'Opzione Senza Lattosio',
+    chooseLactoseFree: 'Opzione Crema Senza Lattosio',
     numberOfPeople: 'Numero di Persone',
     dedication: 'Dedica sul Dolce',
     dedicationPlaceholder: 'Es: Buon Compleanno Maria!',
@@ -454,6 +463,8 @@ export const UI_TEXTS = {
     preview: 'Riepilogo Dolce',
     priceLabel: 'Prezzo Dolce Personalizzato',
     continueButton: 'Continua con Altri Prodotti',
+    firstLayer: 'Primo Strato',
+    secondLayer: 'Secondo Strato',
   },
 
   classicCake: {
@@ -491,6 +502,23 @@ export const UI_TEXTS = {
     paymentMethod: 'Metodo di Pagamento',
     confirmButton: 'Paga Acconto',
     securityInfo: 'Il pagamento è sicuro e protetto. Pagherai solo il 50% ora, il resto al ritiro del tuo ordine.',
+    pickupDateTime: 'Data e Ora di Ritiro',
+    selectDate: 'Seleziona Data',
+    selectTime: 'Seleziona Orario',
+    minimumNotice: 'Prenotazione minima 24 ore prima del ritiro',
+  },
+
+  auth: {
+    loginTitle: 'Accedi',
+    registerTitle: 'Registrati',
+    firstName: 'Nome',
+    lastName: 'Cognome',
+    email: 'Email',
+    phone: 'Numero di Telefono',
+    loginButton: 'Accedi',
+    registerButton: 'Registrati',
+    switchToRegister: 'Non hai un account? Registrati',
+    switchToLogin: 'Hai già un account? Accedi',
   },
 };
 
@@ -560,6 +588,10 @@ export const MESSAGES = {
     incompleteClassicCakeConfiguration: 'Seleziona un dolce e il numero di persone per continuare',
     selectPaymentMethod: 'Seleziona Metodo di Pagamento',
     selectPaymentMethodDescription: 'Scegli come vuoi pagare l\'acconto',
+    selectPickupDateTime: 'Seleziona Data e Ora',
+    selectPickupDateTimeDescription: 'Scegli quando vuoi ritirare il tuo ordine',
+    minimumNoticeRequired: 'Prenotazione Anticipata Richiesta',
+    minimumNoticeRequiredDescription: 'Il ritiro deve essere prenotato con almeno 24 ore di anticipo',
   },
   
   success: {
@@ -568,6 +600,13 @@ export const MESSAGES = {
     orderConfirmed: 'Ordine Confermato! 🎉',
     orderConfirmedDescription: 'Il tuo ordine è stato confermato. Riceverai una notifica quando sarà pronto per il ritiro.',
     backToHome: 'Torna alla Home',
+    registrationSuccess: 'Registrazione Completata',
+    registrationSuccessDescription: 'Il tuo account è stato creato con successo!',
+  },
+
+  warnings: {
+    lactoseFreeWarning: 'Attenzione',
+    lactoseFreeWarningDescription: 'Pan di spagna, sfoglia e crostata contengono tracce di latte poi cucinati in forno.',
   },
 };
 

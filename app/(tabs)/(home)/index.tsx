@@ -32,13 +32,6 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.header}>
-          {PASTRY_INFO.logo && (
-            <Image 
-              source={PASTRY_INFO.logo} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          )}
           <Text style={styles.title}>{PASTRY_INFO.welcomeTitle}</Text>
           <Text style={styles.subtitle}>
             {PASTRY_INFO.welcomeSubtitle}
@@ -50,7 +43,11 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/(home)/customize-cake')}
         >
           <View style={styles.cardIcon}>
-            <IconSymbol name="birthday.cake" size={40} color="#FFFFFF" />
+            <Image 
+              source={{ uri: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=200' }}
+              style={styles.iconImage}
+              resizeMode="cover"
+            />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{UI_TEXTS.home.createCakeTitle}</Text>
@@ -66,7 +63,11 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/(home)/classic-cake')}
         >
           <View style={[styles.cardIcon, { backgroundColor: colors.secondary }]}>
-            <IconSymbol name="cake" size={40} color="#FFFFFF" />
+            <Image 
+              source={{ uri: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200' }}
+              style={styles.iconImage}
+              resizeMode="cover"
+            />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{UI_TEXTS.home.chooseCakeTitle}</Text>
@@ -82,7 +83,11 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/(home)/products')}
         >
           <View style={[styles.cardIcon, { backgroundColor: colors.accent }]}>
-            <IconSymbol name="cart" size={40} color="#FFFFFF" />
+            <Image 
+              source={{ uri: 'https://images.unsplash.com/photo-1514517521153-1be72277b32f?w=200' }}
+              style={styles.iconImage}
+              resizeMode="cover"
+            />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{UI_TEXTS.home.productsTitle}</Text>
@@ -142,14 +147,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 16,
-    borderWidth: 3,
-    borderColor: colors.primary,
-  },
   title: {
     fontSize: 28,
     fontWeight: '800',
@@ -181,6 +178,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    overflow: 'hidden',
+  },
+  iconImage: {
+    width: '100%',
+    height: '100%',
   },
   cardContent: {
     flex: 1,

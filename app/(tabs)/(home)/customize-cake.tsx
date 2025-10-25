@@ -23,16 +23,29 @@ export default function CustomizeCakeScreen() {
     if (updates.base !== undefined) {
       if (updates.base === 'meringa') {
         newConfig.cream = null;
+        newConfig.creamFirstLayer = null;
+        newConfig.creamSecondLayer = null;
         newConfig.variegatura = 'nessuna';
         if (!newConfig.meringaFilling) {
           newConfig.meringaFilling = null;
         }
       } else {
         newConfig.meringaFilling = null;
-        if (!newConfig.cream) {
-          newConfig.cream = null;
+        if (!newConfig.creamFirstLayer) {
+          newConfig.creamFirstLayer = null;
+        }
+        if (!newConfig.creamSecondLayer) {
+          newConfig.creamSecondLayer = null;
         }
       }
+    }
+
+    // Gestisci il cambio dell'opzione senza lattosio
+    if (updates.lactoseFree === 'senza_lattosio' && config.lactoseFree !== 'senza_lattosio') {
+      Alert.alert(
+        MESSAGES.warnings.lactoseFreeWarning,
+        MESSAGES.warnings.lactoseFreeWarningDescription
+      );
     }
     
     setConfig(newConfig);
@@ -69,7 +82,7 @@ export default function CustomizeCakeScreen() {
 
   const isMeringa = config.base === 'meringa';
   const canProceed = config.base && config.numberOfPeople > 0 && 
-    (isMeringa ? config.meringaFilling : config.cream);
+    (isMeringa ? config.meringaFilling : (config.creamFirstLayer && config.creamSecondLayer));
 
   const handleContinue = () => {
     if (!canProceed) {
@@ -89,7 +102,7 @@ export default function CustomizeCakeScreen() {
   };
 
   const renderSummary = () => {
-    if (!config.base && !config.cream && !config.meringaFilling) return null;
+    if (!config.base && !config.creamFirstLayer && !config.creamSecondLayer && !config.meringaFilling) return null;
 
     const totalWeightKg = (config.numberOfPeople * GRAMS_PER_PERSON) / 1000;
     const basePrice = totalWeightKg * CAKE_PRICING.pricePerKg;
@@ -104,6 +117,9 @@ export default function CustomizeCakeScreen() {
     const lactoseFreePrice = lactoseFreeOption?.price || 0;
     
     const photoPrice = config.photoUri ? CAKE_PRICING.photoSurcharge : 0;
+
+    const differentCreamsPrice = (config.creamFirstLayer && config.creamSecondLayer && 
+      config.creamFirstLayer !== config.creamSecondLayer) ? CAKE_PRICING.differentCreamsSurcharge : 0;
 
     return (
       <View style={styles.summaryCard}>
@@ -127,12 +143,28 @@ export default function CustomizeCakeScreen() {
           </View>
         )}
         
-        {!isMeringa && config.cream && (
+        {!isMeringa && config.creamFirstLayer && (
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Crema:</Text>
+            <Text style={styles.summaryLabel}>Crema Primo Strato:</Text>
             <Text style={styles.summaryValue}>
-              {CAKE_CREAMS.find(c => c.value === config.cream)?.label}
+              {CAKE_CREAMS.find(c => c.value === config.creamFirstLayer)?.label}
             </Text>
+          </View>
+        )}
+
+        {!isMeringa && config.creamSecondLayer && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Crema Secondo Strato:</Text>
+            <Text style={styles.summaryValue}>
+              {CAKE_CREAMS.find(c => c.value === config.creamSecondLayer)?.label}
+            </Text>
+          </View>
+        )}
+
+        {differentCreamsPrice > 0 && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Due Creme Diverse:</Text>
+            <Text style={styles.summaryValue}>+€{differentCreamsPrice.toFixed(2)}</Text>
           </View>
         )}
 
@@ -165,7 +197,7 @@ export default function CustomizeCakeScreen() {
         
         {config.lactoseFree === 'senza_lattosio' && (
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Senza Lattosio:</Text>
+            <Text style={styles.summaryLabel}>Crema Senza Lattosio:</Text>
             <Text style={styles.summaryValue}>
               Sì (+€{lactoseFreePrice.toFixed(2)})
             </Text>
@@ -205,6 +237,7 @@ export default function CustomizeCakeScreen() {
           {variegaturaPrice > 0 && ` + Variegatura: €${variegaturaPrice.toFixed(2)}`}
           {finituraPrice > 0 && ` + Finitura: €${finituraPrice.toFixed(2)}`}
           {lactoseFreePrice > 0 && ` + Senza Lattosio: €${lactoseFreePrice.toFixed(2)}`}
+          {differentCreamsPrice > 0 && ` + Due Creme: €${differentCreamsPrice.toFixed(2)}`}
           {photoPrice > 0 && ` + Foto: €${photoPrice.toFixed(2)}`}
         </Text>
       </View>
@@ -251,12 +284,32 @@ export default function CustomizeCakeScreen() {
         ) : (
           <>
             <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCream}</Text>
+            
+            <Text style={styles.subSectionTitle}>{UI_TEXTS.customizeCake.firstLayer}</Text>
             <OptionSelector
               title=""
               options={CAKE_CREAMS}
-              selectedValue={config.cream}
-              onSelect={(value) => updateConfig({ cream: value as any })}
+              selectedValue={config.creamFirstLayer}
+              onSelect={(value) => updateConfig({ creamFirstLayer: value as any })}
             />
+
+            <Text style={styles.subSectionTitle}>{UI_TEXTS.customizeCake.secondLayer}</Text>
+            <OptionSelector
+              title=""
+              options={CAKE_CREAMS}
+              selectedValue={config.creamSecondLayer}
+              onSelect={(value) => updateConfig({ creamSecondLayer: value as any })}
+            />
+
+            {config.creamFirstLayer && config.creamSecondLayer && 
+             config.creamFirstLayer !== config.creamSecondLayer && (
+              <View style={styles.infoBox}>
+                <IconSymbol name="info.circle" size={20} color={colors.primary} />
+                <Text style={styles.infoText}>
+                  Due creme diverse: +€{CAKE_PRICING.differentCreamsSurcharge.toFixed(2)}
+                </Text>
+              </View>
+            )}
 
             <Text style={styles.sectionTitle}>{UI_TEXTS.customizeCake.chooseCondimento}</Text>
             <View style={styles.optionsGrid}>
@@ -447,6 +500,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 12,
   },
+  subSectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -528,6 +588,22 @@ const styles = StyleSheet.create({
   },
   finituraDescriptionSelected: {
     color: colors.text,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.highlight,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
   },
   peopleSelector: {
     flexDirection: 'row',

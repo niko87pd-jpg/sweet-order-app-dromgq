@@ -21,6 +21,10 @@ interface OrderContextType {
   getOrderTotal: () => number;
   getDepositAmount: () => number;
   clearOrder: () => void;
+  pickupDate: Date | null;
+  pickupTime: string | null;
+  setPickupDate: (date: Date | null) => void;
+  setPickupTime: (time: string | null) => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -28,6 +32,8 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 const initialCakeConfig: CakeConfiguration = {
   base: null,
   cream: null,
+  creamFirstLayer: null,
+  creamSecondLayer: null,
   meringaFilling: null,
   condimento: 'nessuno',
   variegatura: 'nessuna',
@@ -57,6 +63,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [cakeConfig, setCakeConfig] = useState<CakeConfiguration>(initialCakeConfig);
   const [classicCakeConfig, setClassicCakeConfig] = useState<ClassicCakeConfiguration>(initialClassicCakeConfig);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [pickupDate, setPickupDate] = useState<Date | null>(null);
+  const [pickupTime, setPickupTime] = useState<string | null>(null);
 
   const updateCakeConfig = (updates: Partial<CakeConfiguration>) => {
     setCakeConfig(prev => ({ ...prev, ...updates }));
@@ -136,6 +144,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       totalPrice += lactoseFreeOption.price;
     }
     
+    // Aggiungi sovraprezzo per due creme diverse
+    if (cakeConfig.creamFirstLayer && cakeConfig.creamSecondLayer && 
+        cakeConfig.creamFirstLayer !== cakeConfig.creamSecondLayer) {
+      totalPrice += CAKE_PRICING.differentCreamsSurcharge;
+    }
+    
     // Aggiungi sovraprezzo foto se presente
     if (cakeConfig.photoUri) {
       totalPrice += CAKE_PRICING.photoSurcharge;
@@ -187,6 +201,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     resetCakeConfig();
     resetClassicCakeConfig();
     clearProducts();
+    setPickupDate(null);
+    setPickupTime(null);
   };
 
   return (
@@ -209,6 +225,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         getOrderTotal,
         getDepositAmount,
         clearOrder,
+        pickupDate,
+        pickupTime,
+        setPickupDate,
+        setPickupTime,
       }}
     >
       {children}
