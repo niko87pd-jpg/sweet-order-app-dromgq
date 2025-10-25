@@ -153,25 +153,27 @@ export default function ClassicCakeScreen() {
               ]}
               onPress={() => updateConfig({ cakeType: cake.value as any })}
             >
-              {cake.imageUrl && (
-                <Image 
-                  source={{ uri: cake.imageUrl }} 
-                  style={styles.cakeImage}
-                  resizeMode="cover"
-                />
-              )}
-              <View style={styles.cakeInfo}>
-                <Text style={[
-                  styles.cakeLabel,
-                  config.cakeType === cake.value && styles.cakeLabelSelected
-                ]}>
-                  {cake.label}
-                </Text>
-                <Text style={styles.cakeDescription}>{cake.description}</Text>
+              <View style={styles.cakeCardContent}>
+                {cake.imageUrl && (
+                  <Image 
+                    source={{ uri: cake.imageUrl }} 
+                    style={styles.cakeImage}
+                    resizeMode="cover"
+                  />
+                )}
+                <View style={styles.cakeInfo}>
+                  <Text style={[
+                    styles.cakeLabel,
+                    config.cakeType === cake.value && styles.cakeLabelSelected
+                  ]}>
+                    {cake.label}
+                  </Text>
+                  <Text style={styles.cakeDescription}>{cake.description}</Text>
+                </View>
               </View>
               {config.cakeType === cake.value && (
                 <View style={styles.selectedBadge}>
-                  <IconSymbol name="checkmark.circle.fill" size={28} color={colors.primary} />
+                  <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
                 </View>
               )}
             </TouchableOpacity>
@@ -262,53 +264,61 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cakesGrid: {
-    gap: 16,
+    gap: 12,
     marginBottom: 10,
   },
   cakeCard: {
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: colors.background,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-    elevation: 4,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 2,
     position: 'relative',
+    padding: 12,
   },
   cakeCardSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.highlight,
   },
+  cakeCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   cakeImage: {
-    width: '100%',
-    height: 180,
+    width: 80,
+    height: 80,
+    borderRadius: 8,
   },
   cakeInfo: {
-    padding: 16,
+    flex: 1,
+    paddingRight: 30,
   },
   cakeLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   cakeLabelSelected: {
     color: colors.primary,
   },
   cakeDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   selectedBadge: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 8,
+    right: 8,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 4,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.2)',
-    elevation: 4,
+    borderRadius: 16,
+    padding: 2,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.15)',
+    elevation: 3,
   },
   peopleSelector: {
     flexDirection: 'row',
