@@ -162,6 +162,19 @@ export default function CheckoutScreen() {
     });
   };
 
+  const handleCallPhone = () => {
+    const phoneUrl = `tel:${PASTRY_INFO.phone}`;
+    Linking.canOpenURL(phoneUrl).then(supported => {
+      if (supported) {
+        Linking.openURL(phoneUrl);
+      } else {
+        Alert.alert('Errore', 'Impossibile effettuare la chiamata');
+      }
+    }).catch(() => {
+      Alert.alert('Errore', 'Impossibile effettuare la chiamata');
+    });
+  };
+
   const hasCustomCake = cakeConfig.base !== null;
   const hasClassicCake = classicCakeConfig.cakeType !== null;
 
@@ -370,7 +383,16 @@ export default function CheckoutScreen() {
 
           <View style={styles.noticeBox}>
             <IconSymbol name="info.circle" size={20} color={colors.secondary} />
-            <Text style={styles.noticeText}>{UI_TEXTS.checkout.minimumNotice}</Text>
+            <View style={styles.noticeTextContainer}>
+              <Text style={styles.noticeText}>{UI_TEXTS.checkout.minimumNotice}</Text>
+              <Text style={styles.urgencyText}>
+                Per urgenze last minute chiamare al{' '}
+                <Text style={styles.phoneLink} onPress={handleCallPhone}>
+                  {PASTRY_INFO.phone}
+                </Text>
+                {' '}(in orario di apertura)
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -606,28 +628,42 @@ const styles = StyleSheet.create({
   },
   dateTimeLabel: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: '#000000',
     marginBottom: 2,
+    fontWeight: '600',
   },
   dateTimeValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.text,
+    color: '#000000',
   },
   noticeBox: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colors.highlight,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
     gap: 8,
   },
-  noticeText: {
+  noticeTextContainer: {
     flex: 1,
+  },
+  noticeText: {
     fontSize: 13,
     color: colors.text,
     fontWeight: '600',
+    marginBottom: 6,
+  },
+  urgencyText: {
+    fontSize: 12,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  phoneLink: {
+    color: colors.primary,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   mapCard: {
     backgroundColor: colors.card,
