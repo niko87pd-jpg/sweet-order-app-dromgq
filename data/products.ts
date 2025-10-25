@@ -42,6 +42,6 @@ export const ADDITIONAL_PRODUCTS: Product[] = [
     name: 'Contenitore Termico',
     description: 'Con ghiacci per mantenimento dolce 8 ore senza frigorifero - €5 noleggio + €50 cauzione in contanti',
     price: 5,
-    imageUrl: require('@/assets/images/abb2f98a-e95e-4fda-8c4d-f1f1f3f72977.jpeg'),
+    imageUrl: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&q=80',
   },
 ];

@@ -357,29 +357,31 @@ export default function CheckoutScreen() {
         <View style={styles.dateTimeCard}>
           <Text style={styles.dateTimeTitle}>{UI_TEXTS.checkout.pickupDateTime}</Text>
           
-          <TouchableOpacity 
-            style={styles.dateTimeButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <IconSymbol name="calendar" size={24} color={colors.primary} />
-            <View style={styles.dateTimeContent}>
-              <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectDate}</Text>
-              <Text style={styles.dateTimeValue}>{formatDate(pickupDate)}</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.bordeauxBox}>
+            <TouchableOpacity 
+              style={styles.dateTimeButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <IconSymbol name="calendar" size={24} color="#FFFFFF" />
+              <View style={styles.dateTimeContent}>
+                <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectDate}</Text>
+                <Text style={styles.dateTimeValue}>{formatDate(pickupDate)}</Text>
+              </View>
+              <IconSymbol name="chevron.right" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.dateTimeButton}
-            onPress={() => setShowTimePicker(true)}
-          >
-            <IconSymbol name="clock" size={24} color={colors.primary} />
-            <View style={styles.dateTimeContent}>
-              <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectTime}</Text>
-              <Text style={styles.dateTimeValue}>{pickupTime || 'Seleziona orario'}</Text>
-            </View>
-            <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.dateTimeButton}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <IconSymbol name="clock" size={24} color="#FFFFFF" />
+              <View style={styles.dateTimeContent}>
+                <Text style={styles.dateTimeLabel}>{UI_TEXTS.checkout.selectTime}</Text>
+                <Text style={styles.dateTimeValue}>{pickupTime || 'Seleziona orario'}</Text>
+              </View>
+              <IconSymbol name="chevron.right" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.noticeBox}>
             <IconSymbol name="info.circle" size={20} color={colors.secondary} />
@@ -614,12 +616,20 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 16,
   },
+  bordeauxBox: {
+    backgroundColor: '#800020',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    boxShadow: '0px 4px 12px rgba(128, 0, 32, 0.3)',
+    elevation: 4,
+  },
   dateTimeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     marginBottom: 12,
   },
   dateTimeContent: {
@@ -628,14 +638,15 @@ const styles = StyleSheet.create({
   },
   dateTimeLabel: {
     fontSize: 13,
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 2,
     fontWeight: '600',
+    opacity: 0.9,
   },
   dateTimeValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   noticeBox: {
     flexDirection: 'row',
