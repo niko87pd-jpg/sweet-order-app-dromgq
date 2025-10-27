@@ -2,9 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// These will be set by the user when they enable Supabase
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+// Supabase configuration
+const supabaseUrl = 'https://wygucqfuakuxvukyupzb.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5Z3VjcWZ1YWt1eHZ1a3l1cHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1MjQ0MDksImV4cCI6MjA3NzEwMDQwOX0.kJFgVpMahmJu0Y9c6-WC7wB9BRQXpM1qIxUYQ7cdyhI';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -23,6 +23,7 @@ export interface Customer {
   email: string;
   phone: string;
   created_at: string;
+  updated_at?: string;
   user_id?: string;
 }
 
@@ -44,3 +45,6 @@ export interface Order {
 export const isSupabaseConfigured = () => {
   return supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '';
 };
+
+console.log('Supabase configured:', isSupabaseConfigured());
+console.log('Supabase URL:', supabaseUrl);
