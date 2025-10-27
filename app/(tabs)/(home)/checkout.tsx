@@ -56,7 +56,6 @@ export default function CheckoutScreen() {
       setTempDate(selectedDate);
       setPickupDate(selectedDate);
       if (Platform.OS === 'android') {
-        // On Android, close the picker after selection
         setShowDatePicker(false);
       }
     }
@@ -78,7 +77,6 @@ export default function CheckoutScreen() {
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       setPickupTime(`${hours}:${minutes}`);
       if (Platform.OS === 'android') {
-        // On Android, close the picker after selection
         setShowTimePicker(false);
       }
     }
@@ -123,7 +121,7 @@ export default function CheckoutScreen() {
           emailBody += `Dedica: "${cakeConfig.dedication}"\n`;
         }
         if (cakeConfig.photoUri) {
-          emailBody += `Foto: Sì\n`;
+          emailBody += `Foto: Sì (${cakeConfig.numberOfPeople >= 12 ? '8€' : '4€'})\n`;
         }
         emailBody += `Prezzo: €${getCakePrice().toFixed(2)}\n`;
       }
@@ -136,7 +134,7 @@ export default function CheckoutScreen() {
           emailBody += `Dedica: "${classicCakeConfig.dedication}"\n`;
         }
         if (classicCakeConfig.photoUri) {
-          emailBody += `Foto: Sì\n`;
+          emailBody += `Foto: Sì (${classicCakeConfig.numberOfPeople >= 12 ? '8€' : '4€'})\n`;
         }
         emailBody += `Prezzo: €${getClassicCakePrice().toFixed(2)}\n`;
       }
@@ -165,7 +163,7 @@ export default function CheckoutScreen() {
       const isAvailable = await MailComposer.isAvailableAsync();
       if (isAvailable) {
         await MailComposer.composeAsync({
-          recipients: ['duemondi87@gmail.com'],
+          recipients: [PASTRY_INFO.email],
           subject: `Nuovo Ordine - ${customer?.first_name || 'Cliente'} ${customer?.last_name || ''}`,
           body: emailBody,
         });
@@ -212,7 +210,8 @@ export default function CheckoutScreen() {
     // Save order to database if Supabase is enabled
     if (isSupabaseEnabled && customer) {
       try {
-        const { error } = await supabase.from('orders').insert({
+        console.log('Saving order to database...');
+        const { data, error } = await supabase.from('orders').insert({
           customer_id: customer.id,
           order_data: {
             cakeConfig,
@@ -224,14 +223,20 @@ export default function CheckoutScreen() {
           status: 'pending',
           pickup_date: pickupDate?.toISOString(),
           pickup_time: pickupTime,
-          notes: orderNotes,
-        });
+          notes: orderNotes || null,
+        }).select();
 
         if (error) {
           console.error('Error saving order:', error);
+          Alert.alert('Errore', 'Impossibile salvare l\'ordine nel database. Riprova.');
+          return;
         }
+
+        console.log('Order saved successfully:', data);
       } catch (error) {
         console.error('Error saving order:', error);
+        Alert.alert('Errore', 'Si è verificato un errore durante il salvataggio dell\'ordine.');
+        return;
       }
     }
 
@@ -380,7 +385,7 @@ export default function CheckoutScreen() {
               {cakeConfig.photoUri && (
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Foto:</Text>
-                  <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+                  <Text style={styles.summaryValue}>✓ Aggiunta ({cakeConfig.numberOfPeople >= 12 ? '8€' : '4€'})</Text>
                 </View>
               )}
 
@@ -421,7 +426,7 @@ export default function CheckoutScreen() {
               {classicCakeConfig.photoUri && (
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Foto:</Text>
-                  <Text style={styles.summaryValue}>✓ Aggiunta</Text>
+                  <Text style={styles.summaryValue}>✓ Aggiunta ({classicCakeConfig.numberOfPeople >= 12 ? '8€' : '4€'})</Text>
                 </View>
               )}
 

@@ -36,10 +36,10 @@ export default function AuthScreen() {
         return;
       }
 
-      // Basic phone validation
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-        Alert.alert('Errore', 'Inserisci un numero di telefono valido (10 cifre)');
+      // Basic phone validation (10 digits)
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        Alert.alert('Errore', 'Inserisci un numero di telefono valido (almeno 10 cifre)');
         return;
       }
 
@@ -71,7 +71,7 @@ export default function AuthScreen() {
 
       Alert.alert(
         MESSAGES.success.registrationSuccess,
-        'Il tuo account è stato creato con successo! Ora puoi effettuare il login.',
+        'Il tuo account è stato creato con successo!\n\nRiceverai un\'email di verifica. Clicca sul link nell\'email per confermare il tuo account prima di effettuare il login.',
         [
           {
             text: 'OK',
@@ -106,7 +106,9 @@ export default function AuthScreen() {
       setLoading(false);
 
       if (error) {
-        Alert.alert('Errore', error.message || 'Email o password non corretti');
+        // Show specific error message from Supabase
+        const errorMessage = error.message || 'Email o password non corretti';
+        Alert.alert('Errore di Accesso', errorMessage);
         return;
       }
 
@@ -142,7 +144,7 @@ export default function AuthScreen() {
           {!isLogin && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{UI_TEXTS.auth.firstName}</Text>
+                <Text style={styles.inputLabel}>{UI_TEXTS.auth.firstName} *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Mario"
@@ -154,7 +156,7 @@ export default function AuthScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{UI_TEXTS.auth.lastName}</Text>
+                <Text style={styles.inputLabel}>{UI_TEXTS.auth.lastName} *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Rossi"
@@ -168,21 +170,22 @@ export default function AuthScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>{UI_TEXTS.auth.email}</Text>
+            <Text style={styles.inputLabel}>{UI_TEXTS.auth.email} *</Text>
             <TextInput
               style={styles.input}
               placeholder="mario.rossi@email.com"
               placeholderTextColor={colors.textSecondary}
               value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              onChangeText={(text) => setFormData({ ...formData, email: text.toLowerCase().trim() })}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
           {!isLogin && (
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>{UI_TEXTS.auth.phone}</Text>
+              <Text style={styles.inputLabel}>{UI_TEXTS.auth.phone} *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="3471234567"
@@ -195,15 +198,16 @@ export default function AuthScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <Text style={styles.inputLabel}>Password *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Inserisci la tua password"
+              placeholder={isLogin ? "Inserisci la tua password" : "Minimo 6 caratteri"}
               placeholderTextColor={colors.textSecondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
@@ -226,7 +230,10 @@ export default function AuthScreen() {
 
           <TouchableOpacity 
             style={styles.switchButton}
-            onPress={() => setIsLogin(!isLogin)}
+            onPress={() => {
+              setIsLogin(!isLogin);
+              setPassword('');
+            }}
           >
             <Text style={styles.switchButtonText}>
               {isLogin ? UI_TEXTS.auth.switchToRegister : UI_TEXTS.auth.switchToLogin}
@@ -237,7 +244,10 @@ export default function AuthScreen() {
         <View style={styles.infoCard}>
           <IconSymbol name="info.circle" size={24} color={colors.primary} />
           <Text style={styles.infoText}>
-            Registrandoti potrai salvare i tuoi ordini e ricevere notifiche sullo stato della preparazione.
+            {isLogin 
+              ? 'Accedi per visualizzare i tuoi ordini e ricevere notifiche sullo stato della preparazione.'
+              : 'Registrandoti potrai salvare i tuoi ordini e ricevere notifiche sullo stato della preparazione. Riceverai un\'email di verifica dopo la registrazione.'
+            }
           </Text>
         </View>
       </ScrollView>
@@ -331,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
     elevation: 2,

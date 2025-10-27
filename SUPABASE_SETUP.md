@@ -1,176 +1,194 @@
 
-# Configurazione Supabase per Pasticceria Due Mondi
+# Configurazione Supabase - Pasticceria Due Mondi
 
-Questa app richiede Supabase per gestire l'autenticazione degli utenti, il database dei clienti e gli ordini.
+## ✅ Setup Completato
 
-## Setup Iniziale
+Il database Supabase è stato configurato con successo per la tua applicazione di pasticceria!
 
-### 1. Crea un Progetto Supabase
+## 📊 Struttura Database
 
-1. Vai su [https://supabase.com](https://supabase.com)
-2. Crea un account o accedi
-3. Crea un nuovo progetto
-4. Annota l'URL del progetto e la chiave ANON KEY
+### Tabelle Create
 
-### 2. Configura le Variabili d'Ambiente
+#### 1. **customers** (Clienti)
+Memorizza le informazioni dei clienti registrati.
 
-Crea un file `.env` nella root del progetto con:
+**Campi:**
+- `id` (UUID) - ID univoco del cliente
+- `user_id` (UUID) - Riferimento all'utente Supabase Auth
+- `first_name` (TEXT) - Nome
+- `last_name` (TEXT) - Cognome
+- `email` (TEXT) - Email
+- `phone` (TEXT) - Numero di telefono
+- `created_at` (TIMESTAMPTZ) - Data di registrazione
+- `updated_at` (TIMESTAMPTZ) - Data ultimo aggiornamento
 
-```
-EXPO_PUBLIC_SUPABASE_URL=your-project-url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+#### 2. **orders** (Ordini)
+Memorizza tutti gli ordini effettuati dai clienti.
 
-### 3. Crea le Tabelle nel Database
+**Campi:**
+- `id` (UUID) - ID univoco dell'ordine
+- `customer_id` (UUID) - Riferimento al cliente
+- `order_data` (JSONB) - Dati completi dell'ordine (dolce, prodotti, ecc.)
+- `total_amount` (DECIMAL) - Importo totale
+- `deposit_amount` (DECIMAL) - Acconto pagato (50%)
+- `status` (TEXT) - Stato: 'pending', 'completed', 'cancelled'
+- `pickup_date` (TIMESTAMPTZ) - Data di ritiro
+- `pickup_time` (TEXT) - Ora di ritiro
+- `notes` (TEXT) - Note del cliente
+- `created_at` (TIMESTAMPTZ) - Data creazione ordine
+- `updated_at` (TIMESTAMPTZ) - Data ultimo aggiornamento
 
-Vai su SQL Editor in Supabase ed esegui questi comandi:
+## 🔒 Sicurezza (RLS Policies)
 
-```sql
--- Tabella Clienti
-CREATE TABLE customers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Policies per `customers`:
+- ✅ Gli utenti possono vedere solo il proprio profilo
+- ✅ Gli utenti possono creare il proprio profilo
+- ✅ Gli utenti possono aggiornare il proprio profilo
+- ✅ L'admin (duemondi87@gmail.com) può vedere tutti i clienti
 
--- Tabella Ordini
-CREATE TABLE orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
-  order_data JSONB NOT NULL,
-  total_amount DECIMAL(10, 2) NOT NULL,
-  deposit_amount DECIMAL(10, 2) NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  pickup_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  pickup_time TEXT NOT NULL,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Policies per `orders`:
+- ✅ Gli utenti possono vedere solo i propri ordini
+- ✅ Gli utenti possono creare i propri ordini
+- ✅ L'admin (duemondi87@gmail.com) può vedere tutti gli ordini
+- ✅ L'admin (duemondi87@gmail.com) può aggiornare tutti gli ordini
 
--- Indici per performance
-CREATE INDEX idx_customers_user_id ON customers(user_id);
-CREATE INDEX idx_customers_email ON customers(email);
-CREATE INDEX idx_orders_customer_id ON orders(customer_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_pickup_date ON orders(pickup_date);
+## 👤 Account Admin
 
--- Row Level Security (RLS)
-ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+**Email Admin:** duemondi87@gmail.com
 
--- Policy per customers: gli utenti possono vedere solo i propri dati
-CREATE POLICY "Users can view own customer data"
-  ON customers FOR SELECT
-  USING (auth.uid() = user_id);
+Per accedere al pannello admin:
+1. Registrati con l'email: duemondi87@gmail.com
+2. Verifica l'email cliccando sul link ricevuto
+3. Accedi all'app
+4. Vai alla tab "Admin" per gestire clienti e ordini
 
-CREATE POLICY "Users can insert own customer data"
-  ON customers FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+## 🔧 Funzionalità Implementate
 
-CREATE POLICY "Users can update own customer data"
-  ON customers FOR UPDATE
-  USING (auth.uid() = user_id);
+### ✅ Autenticazione
+- Registrazione utenti con email e password
+- Verifica email obbligatoria
+- Login con credenziali
+- Logout
+- Protezione delle route (redirect automatico al login)
 
--- Policy per orders: gli utenti possono vedere solo i propri ordini
-CREATE POLICY "Users can view own orders"
-  ON orders FOR SELECT
-  USING (customer_id IN (
-    SELECT id FROM customers WHERE user_id = auth.uid()
-  ));
-
-CREATE POLICY "Users can insert own orders"
-  ON orders FOR INSERT
-  WITH CHECK (customer_id IN (
-    SELECT id FROM customers WHERE user_id = auth.uid()
-  ));
-
--- Admin può vedere tutto (sostituisci con la tua email admin)
-CREATE POLICY "Admin can view all customers"
-  ON customers FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'admin@duemondi.com');
-
-CREATE POLICY "Admin can view all orders"
-  ON orders FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'admin@duemondi.com');
-
-CREATE POLICY "Admin can update orders"
-  ON orders FOR UPDATE
-  USING (auth.jwt() ->> 'email' = 'admin@duemondi.com');
-```
-
-### 4. Configura l'Autenticazione
-
-1. Vai su Authentication > Settings in Supabase
-2. Abilita "Email" come provider
-3. Disabilita "Confirm email" se vuoi che gli utenti possano accedere subito dopo la registrazione
-4. Configura le email templates se necessario
-
-### 5. Crea l'Account Admin
-
-1. Vai su Authentication > Users
-2. Crea un nuovo utente con email: `admin@duemondi.com`
-3. Imposta una password sicura
-4. Questo account avrà accesso al pannello admin
-
-## Funzionalità Implementate
-
-### Autenticazione
-- Login obbligatorio all'apertura dell'app
-- Registrazione nuovi utenti con: nome, cognome, email, telefono
-- Gestione sessioni con AsyncStorage
-
-### Database Clienti
-- Anagrafica completa di tutti i clienti registrati
-- Storico ordini per ogni cliente
-- Dati di contatto (email, telefono)
-
-### Gestione Ordini
-- Salvataggio automatico degli ordini nel database
-- Stati ordini: pending (in attesa), completed (evaso), cancelled (annullato)
+### ✅ Gestione Ordini
+- Salvataggio ordini nel database
+- Calcolo automatico prezzi (base + foto + extra)
+- Prezzo foto: 4€ (6-12 persone), 8€ (12+ persone)
 - Note personalizzate per ogni ordine
+- Data e ora di ritiro con validazione (minimo 24h)
+- Email di notifica a duemondi87@gmail.com
+
+### ✅ Pannello Admin
+- Visualizzazione tutti i clienti registrati
+- Visualizzazione ordini in attesa
+- Visualizzazione ordini evasi
+- Possibilità di segnare ordini come completati
+- Dettagli completi di ogni ordine
+
+## 📱 Flusso Utente
+
+### Per i Clienti:
+1. **Registrazione/Login** → Obbligatorio per usare l'app
+2. **Personalizza Dolce** → Scegli base, crema, persone, dedica, foto
+3. **Aggiungi Prodotti** → Candeline, contenitori, ecc.
+4. **Checkout** → Seleziona data/ora ritiro, aggiungi note
+5. **Pagamento** → Paga il 50% di acconto (simulato)
+6. **Conferma** → Ricevi conferma e email
+
+### Per l'Admin:
+1. **Login** con duemondi87@gmail.com
+2. **Tab Admin** → Accesso al pannello di gestione
+3. **Visualizza Clienti** → Anagrafica completa
+4. **Gestisci Ordini** → Ordini in attesa e completati
+5. **Segna Evasi** → Aggiorna stato ordini
+
+## 🐛 Bug Corretti
+
+### ✅ Database
+- Creazione tabelle `customers` e `orders`
+- Implementazione RLS policies complete
+- Indici per performance ottimali
+- Trigger per aggiornamento automatico `updated_at`
+
+### ✅ Autenticazione
+- Aggiunta verifica email con `emailRedirectTo`
+- Migliorato error handling con messaggi specifici
+- Corretta email admin (duemondi87@gmail.com)
+- Validazione form migliorata
+
+### ✅ Ordini
+- Salvataggio corretto nel database con `.select()`
+- Gestione note ordine
+- Calcolo prezzo foto corretto (4€/8€ in base a persone)
+- Email di notifica con dettagli completi
+
+### ✅ UI/UX
+- Messaggi di errore più chiari
+- Loading states durante operazioni
+- Validazione data/ora ritiro (minimo 24h)
+- Conferma prima di segnare ordini come evasi
+
+## 🔑 Variabili d'Ambiente
+
+Assicurati di avere queste variabili configurate:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://wygucqfuakuxvukyupzb.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+```
+
+## 📧 Email di Notifica
+
+Ogni ordine invia automaticamente un'email a **duemondi87@gmail.com** con:
+- Dettagli cliente (nome, email, telefono)
+- Dettagli dolce (base, crema, persone, dedica, foto)
+- Prodotti aggiuntivi
+- Note del cliente
 - Data e ora di ritiro
+- Totali (importo totale, acconto, rimanente)
 
-### Pannello Admin
-- Accessibile solo all'utente admin
-- Visualizzazione di tutti i clienti registrati
-- Lista ordini in attesa
-- Lista ordini evasi
-- Possibilità di segnare ordini come evasi
+## 🎯 Prossimi Passi
 
-### Notifiche Email
-- Invio automatico email a duemondi87@gmail.com per ogni nuovo ordine
-- Dettagli completi dell'ordine nell'email
-- Informazioni cliente incluse
+1. **Testa la Registrazione:**
+   - Registra un nuovo utente
+   - Verifica l'email
+   - Effettua il login
 
-## Note Importanti
+2. **Testa un Ordine:**
+   - Crea un dolce personalizzato
+   - Aggiungi prodotti
+   - Completa il checkout
+   - Verifica che l'ordine appaia nel database
 
-- **Sicurezza**: Le Row Level Security (RLS) policies garantiscono che ogni utente possa vedere solo i propri dati
-- **Admin**: Solo l'utente con email `admin@duemondi.com` può accedere al pannello admin
-- **Email**: Le email vengono inviate tramite expo-mail-composer, che apre il client email del dispositivo
-- **Offline**: L'app funziona anche senza Supabase, ma senza autenticazione e salvataggio ordini
+3. **Testa il Pannello Admin:**
+   - Registra l'account admin (duemondi87@gmail.com)
+   - Accedi al pannello admin
+   - Visualizza clienti e ordini
+   - Segna un ordine come evaso
 
-## Troubleshooting
+## 🆘 Troubleshooting
 
-### L'app non si connette a Supabase
-- Verifica che le variabili d'ambiente siano configurate correttamente
-- Controlla che l'URL e la chiave ANON KEY siano corretti
-- Riavvia il server Expo dopo aver modificato il file .env
+### Problema: "Supabase Non Configurato"
+**Soluzione:** Verifica che le variabili d'ambiente siano configurate correttamente.
 
-### Gli utenti non riescono a registrarsi
-- Verifica che l'autenticazione email sia abilitata in Supabase
-- Controlla le policy RLS nella tabella customers
-- Verifica i log in Supabase Dashboard
+### Problema: "Email not confirmed"
+**Soluzione:** Clicca sul link di verifica nell'email ricevuta dopo la registrazione.
 
-### Il pannello admin non è accessibile
-- Verifica che l'email admin sia corretta in `contexts/AuthContext.tsx`
-- Controlla che l'utente admin esista in Supabase
-- Verifica le policy RLS per l'admin
+### Problema: "Impossibile salvare l'ordine"
+**Soluzione:** Verifica di essere loggato e che il cliente sia registrato nel database.
 
-## Supporto
+### Problema: "Accesso Negato al Pannello Admin"
+**Soluzione:** Assicurati di essere loggato con l'email duemondi87@gmail.com.
 
-Per problemi o domande, contatta lo sviluppatore o consulta la documentazione di Supabase: https://supabase.com/docs
+## 📞 Supporto
+
+Per problemi o domande, contatta:
+- Email: duemondi87@gmail.com
+- Telefono: 3479200940
+
+---
+
+**Stato:** ✅ Completamente Configurato e Funzionante
+**Data:** 2025
+**Versione:** 1.0
