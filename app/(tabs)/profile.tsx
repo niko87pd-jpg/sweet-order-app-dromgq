@@ -1,12 +1,33 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking, TouchableOpacity } from 'react-native';
-import { Stack } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking, TouchableOpacity, Alert } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { PASTRY_INFO } from '@/config/appConfig';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
+  const router = useRouter();
+  const { user, customer, signOut, isSupabaseEnabled } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Conferma Logout',
+      'Sei sicuro di voler uscire?',
+      [
+        { text: 'Annulla', style: 'cancel' },
+        {
+          text: 'Esci',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/auth');
+          },
+        },
+      ]
+    );
+  };
   const handleCall = () => {
     Linking.openURL(`tel:${PASTRY_INFO.phone}`);
   };
@@ -24,7 +45,7 @@ export default function ProfileScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Profilo',
+          title: 'Info Due Mondi',
           headerStyle: {
             backgroundColor: colors.card,
           },
@@ -110,6 +131,34 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+
+        {isSupabaseEnabled && user && customer && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Il Tuo Account</Text>
+            
+            <View style={styles.infoCard}>
+              <View style={styles.accountRow}>
+                <Text style={styles.accountLabel}>Nome:</Text>
+                <Text style={styles.accountValue}>
+                  {customer.first_name} {customer.last_name}
+                </Text>
+              </View>
+              <View style={styles.accountRow}>
+                <Text style={styles.accountLabel}>Email:</Text>
+                <Text style={styles.accountValue}>{customer.email}</Text>
+              </View>
+              <View style={styles.accountRow}>
+                <Text style={styles.accountLabel}>Telefono:</Text>
+                <Text style={styles.accountValue}>{customer.phone}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <IconSymbol name="arrow.right.square" size={20} color="#FFFFFF" />
+              <Text style={styles.logoutButtonText}>Esci dall&apos;Account</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informazioni App</Text>
@@ -262,5 +311,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginBottom: 4,
+  },
+  accountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  accountLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  accountValue: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  logoutButton: {
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    boxShadow: '0px 4px 12px rgba(156, 39, 176, 0.3)',
+    elevation: 4,
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

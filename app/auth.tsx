@@ -1,15 +1,19 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { UI_TEXTS, MESSAGES, PASTRY_INFO } from '@/config/appConfig';
 import { UserRegistration } from '@/types/order';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const { signIn, signUp, isSupabaseEnabled } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
   const [formData, setFormData] = useState<UserRegistration>({
     firstName: '',
     lastName: '',
@@ -17,11 +21,11 @@ export default function AuthScreen() {
     phone: '',
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate form
     if (!isLogin) {
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-        Alert.alert('Errore', 'Compila tutti i campi');
+        Alert.alert('Errore', 'Compila tutti i campi obbligatori');
         return;
       }
 
@@ -39,15 +43,42 @@ export default function AuthScreen() {
         return;
       }
 
-      console.log('Registration data:', formData);
-      
+      if (!password || password.length < 6) {
+        Alert.alert('Errore', 'La password deve essere di almeno 6 caratteri');
+        return;
+      }
+
+      if (!isSupabaseEnabled) {
+        Alert.alert(
+          'Supabase Non Configurato',
+          'Per registrarti, è necessario configurare Supabase. Contatta l\'amministratore.',
+        );
+        return;
+      }
+
+      setLoading(true);
+      const { error } = await signUp(formData.email, password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+      });
+      setLoading(false);
+
+      if (error) {
+        Alert.alert('Errore', error.message || 'Impossibile completare la registrazione');
+        return;
+      }
+
       Alert.alert(
         MESSAGES.success.registrationSuccess,
-        MESSAGES.success.registrationSuccessDescription,
+        'Il tuo account è stato creato con successo! Ora puoi effettuare il login.',
         [
           {
             text: 'OK',
-            onPress: () => router.back(),
+            onPress: () => {
+              setIsLogin(true);
+              setPassword('');
+            },
           },
         ]
       );
@@ -57,8 +88,29 @@ export default function AuthScreen() {
         return;
       }
 
-      console.log('Login with email:', formData.email);
-      router.back();
+      if (!password) {
+        Alert.alert('Errore', 'Inserisci la tua password');
+        return;
+      }
+
+      if (!isSupabaseEnabled) {
+        Alert.alert(
+          'Supabase Non Configurato',
+          'Per accedere, è necessario configurare Supabase. Contatta l\'amministratore.',
+        );
+        return;
+      }
+
+      setLoading(true);
+      const { error } = await signIn(formData.email, password);
+      setLoading(false);
+
+      if (error) {
+        Alert.alert('Errore', error.message || 'Email o password non corretti');
+        return;
+      }
+
+      router.replace('/(tabs)/(home)/');
     }
   };
 
@@ -142,11 +194,34 @@ export default function AuthScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>
-              {isLogin ? UI_TEXTS.auth.loginButton : UI_TEXTS.auth.registerButton}
-            </Text>
-            <IconSymbol name="arrow.right" size={20} color="#FFFFFF" />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Inserisci la tua password"
+              placeholderTextColor={colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>
+                  {isLogin ? UI_TEXTS.auth.loginButton : UI_TEXTS.auth.registerButton}
+                </Text>
+                <IconSymbol name="arrow.right" size={20} color="#FFFFFF" />
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -237,6 +312,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   switchButton: {
     marginTop: 16,

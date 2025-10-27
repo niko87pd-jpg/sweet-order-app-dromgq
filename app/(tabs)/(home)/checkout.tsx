@@ -1,15 +1,19 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Linking, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as MailComposer from 'expo-mail-composer';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { UI_TEXTS, MESSAGES, PAYMENT_CONFIG, CAKE_BASES_CONFIG, CAKE_CREAMS_CONFIG, MERINGA_FILLINGS_CONFIG, CLASSIC_CAKES_CONFIG, GRAMS_PER_PERSON, PASTRY_INFO } from '@/config/appConfig';
 import { useOrder } from '@/contexts/OrderContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function CheckoutScreen() {
   const router = useRouter();
+  const { customer, isSupabaseEnabled } = useAuth();
   const { 
     cakeConfig, 
     classicCakeConfig,
@@ -24,6 +28,8 @@ export default function CheckoutScreen() {
     pickupTime,
     setPickupDate,
     setPickupTime,
+    orderNotes,
+    setOrderNotes,
   } = useOrder();
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
@@ -91,7 +97,87 @@ export default function CheckoutScreen() {
     return pickupDateTime >= minPickupTime;
   };
 
-  const handlePayment = () => {
+  const sendOrderEmail = async () => {
+    try {
+      // Build email body
+      let emailBody = `Nuovo Ordine da ${customer?.first_name || 'Cliente'} ${customer?.last_name || ''}\n\n`;
+      emailBody += `=== DETTAGLI CLIENTE ===\n`;
+      emailBody += `Nome: ${customer?.first_name || 'N/A'} ${customer?.last_name || ''}\n`;
+      emailBody += `Email: ${customer?.email || 'N/A'}\n`;
+      emailBody += `Telefono: ${customer?.phone || 'N/A'}\n\n`;
+      
+      emailBody += `=== DETTAGLI ORDINE ===\n`;
+      
+      if (hasCustomCake) {
+        emailBody += `\nDOLCE PERSONALIZZATO:\n`;
+        emailBody += `Base: ${CAKE_BASES_CONFIG.find(b => b.value === cakeConfig.base)?.label}\n`;
+        if (cakeConfig.base === 'meringa' && cakeConfig.meringaFilling) {
+          emailBody += `Ripieno: ${MERINGA_FILLINGS_CONFIG.find(f => f.value === cakeConfig.meringaFilling)?.label}\n`;
+        }
+        if (cakeConfig.base !== 'meringa' && cakeConfig.creamFirstLayer) {
+          emailBody += `Crema Primo Strato: ${CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.creamFirstLayer)?.label}\n`;
+          emailBody += `Crema Secondo Strato: ${CAKE_CREAMS_CONFIG.find(c => c.value === cakeConfig.creamSecondLayer)?.label}\n`;
+        }
+        emailBody += `Persone: ${cakeConfig.numberOfPeople} (${((cakeConfig.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg)\n`;
+        if (cakeConfig.dedication) {
+          emailBody += `Dedica: "${cakeConfig.dedication}"\n`;
+        }
+        if (cakeConfig.photoUri) {
+          emailBody += `Foto: Sì\n`;
+        }
+        emailBody += `Prezzo: €${getCakePrice().toFixed(2)}\n`;
+      }
+      
+      if (hasClassicCake) {
+        emailBody += `\nDOLCE CLASSICO:\n`;
+        emailBody += `Dolce: ${CLASSIC_CAKES_CONFIG.find(c => c.value === classicCakeConfig.cakeType)?.label}\n`;
+        emailBody += `Persone: ${classicCakeConfig.numberOfPeople} (${((classicCakeConfig.numberOfPeople * GRAMS_PER_PERSON) / 1000).toFixed(2)}kg)\n`;
+        if (classicCakeConfig.dedication) {
+          emailBody += `Dedica: "${classicCakeConfig.dedication}"\n`;
+        }
+        if (classicCakeConfig.photoUri) {
+          emailBody += `Foto: Sì\n`;
+        }
+        emailBody += `Prezzo: €${getClassicCakePrice().toFixed(2)}\n`;
+      }
+      
+      if (orderItems.length > 0) {
+        emailBody += `\nPRODOTTI AGGIUNTIVI:\n`;
+        orderItems.forEach(item => {
+          emailBody += `- ${item.product.name} x${item.quantity} = €${(item.product.price * item.quantity).toFixed(2)}\n`;
+        });
+      }
+      
+      if (orderNotes) {
+        emailBody += `\nNOTE DEL CLIENTE:\n${orderNotes}\n`;
+      }
+      
+      emailBody += `\n=== RITIRO ===\n`;
+      emailBody += `Data: ${pickupDate?.toLocaleDateString('it-IT')}\n`;
+      emailBody += `Ora: ${pickupTime}\n\n`;
+      
+      emailBody += `=== TOTALI ===\n`;
+      emailBody += `Totale Ordine: €${getOrderTotal().toFixed(2)}\n`;
+      emailBody += `Acconto Pagato: €${getDepositAmount().toFixed(2)}\n`;
+      emailBody += `Rimanente: €${(getOrderTotal() - getDepositAmount()).toFixed(2)}\n`;
+
+      // Send email
+      const isAvailable = await MailComposer.isAvailableAsync();
+      if (isAvailable) {
+        await MailComposer.composeAsync({
+          recipients: ['duemondi87@gmail.com'],
+          subject: `Nuovo Ordine - ${customer?.first_name || 'Cliente'} ${customer?.last_name || ''}`,
+          body: emailBody,
+        });
+      } else {
+        console.log('Email not available, order details:', emailBody);
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+  };
+
+  const handlePayment = async () => {
     if (!selectedPaymentMethod) {
       Alert.alert(
         MESSAGES.errors.selectPaymentMethod,
@@ -121,6 +207,36 @@ export default function CheckoutScreen() {
     console.log('Deposit amount:', getDepositAmount());
     console.log('Pickup date:', pickupDate);
     console.log('Pickup time:', pickupTime);
+    console.log('Order notes:', orderNotes);
+
+    // Save order to database if Supabase is enabled
+    if (isSupabaseEnabled && customer) {
+      try {
+        const { error } = await supabase.from('orders').insert({
+          customer_id: customer.id,
+          order_data: {
+            cakeConfig,
+            classicCakeConfig,
+            orderItems,
+          },
+          total_amount: getOrderTotal(),
+          deposit_amount: getDepositAmount(),
+          status: 'pending',
+          pickup_date: pickupDate?.toISOString(),
+          pickup_time: pickupTime,
+          notes: orderNotes,
+        });
+
+        if (error) {
+          console.error('Error saving order:', error);
+        }
+      } catch (error) {
+        console.error('Error saving order:', error);
+      }
+    }
+
+    // Send email notification
+    await sendOrderEmail();
 
     Alert.alert(
       MESSAGES.success.paymentSimulated,
@@ -338,6 +454,22 @@ export default function CheckoutScreen() {
               <View style={styles.divider} />
             </>
           )}
+
+          <View style={styles.notesSection}>
+            <Text style={styles.notesLabel}>Note</Text>
+            <TextInput
+              style={styles.notesInput}
+              placeholder="Eventuali note sull'ordine..."
+              placeholderTextColor={colors.textSecondary}
+              value={orderNotes}
+              onChangeText={setOrderNotes}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.divider} />
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{UI_TEXTS.checkout.totalOrder}</Text>
@@ -813,5 +945,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  notesSection: {
+    marginTop: 16,
+  },
+  notesLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  notesInput: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 15,
+    color: colors.text,
+    borderWidth: 2,
+    borderColor: colors.highlight,
+    minHeight: 100,
   },
 });

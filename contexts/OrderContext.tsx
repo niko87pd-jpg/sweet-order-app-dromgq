@@ -25,6 +25,8 @@ interface OrderContextType {
   pickupTime: string | null;
   setPickupDate: (date: Date | null) => void;
   setPickupTime: (time: string | null) => void;
+  orderNotes: string;
+  setOrderNotes: (notes: string) => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -65,6 +67,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [pickupDate, setPickupDate] = useState<Date | null>(null);
   const [pickupTime, setPickupTime] = useState<string | null>(null);
+  const [orderNotes, setOrderNotes] = useState<string>('');
 
   const updateCakeConfig = (updates: Partial<CakeConfiguration>) => {
     setCakeConfig(prev => ({ ...prev, ...updates }));
@@ -150,9 +153,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       totalPrice += CAKE_PRICING.differentCreamsSurcharge;
     }
     
-    // Aggiungi sovraprezzo foto se presente
+    // Aggiungi sovraprezzo foto se presente (4€ per 6-12 persone, 8€ per 12+ persone)
     if (cakeConfig.photoUri) {
-      totalPrice += CAKE_PRICING.photoSurcharge;
+      const photoPrice = cakeConfig.numberOfPeople >= 12 
+        ? (CAKE_PRICING.photoSurchargeOver12 || 8)
+        : CAKE_PRICING.photoSurcharge;
+      totalPrice += photoPrice;
     }
     
     return totalPrice;
@@ -163,9 +169,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const totalWeightKg = (classicCakeConfig.numberOfPeople * CAKE_PRICING.gramsPerPerson) / 1000;
     let totalPrice = totalWeightKg * CAKE_PRICING.pricePerKg;
     
-    // Aggiungi sovraprezzo foto se presente
+    // Aggiungi sovraprezzo foto se presente (4€ per 6-12 persone, 8€ per 12+ persone)
     if (classicCakeConfig.photoUri) {
-      totalPrice += CAKE_PRICING.photoSurcharge;
+      const photoPrice = classicCakeConfig.numberOfPeople >= 12 
+        ? (CAKE_PRICING.photoSurchargeOver12 || 8)
+        : CAKE_PRICING.photoSurcharge;
+      totalPrice += photoPrice;
     }
     
     return totalPrice;
@@ -203,6 +212,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     clearProducts();
     setPickupDate(null);
     setPickupTime(null);
+    setOrderNotes('');
   };
 
   return (
@@ -229,6 +239,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         pickupTime,
         setPickupDate,
         setPickupTime,
+        orderNotes,
+        setOrderNotes,
       }}
     >
       {children}

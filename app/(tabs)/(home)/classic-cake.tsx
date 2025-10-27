@@ -226,8 +226,13 @@ export default function ClassicCakeScreen() {
           <Text style={styles.photoButtonText}>
             {config.photoUri ? UI_TEXTS.classicCake.changePhoto : UI_TEXTS.classicCake.addPhoto}
           </Text>
-          <Text style={styles.photoSurcharge}>+€{CAKE_PRICING.photoSurcharge.toFixed(2)}</Text>
+          <Text style={styles.photoSurcharge}>
+            +€{config.numberOfPeople >= 12 ? (CAKE_PRICING.photoSurchargeOver12 || 8).toFixed(2) : CAKE_PRICING.photoSurcharge.toFixed(2)}
+          </Text>
         </TouchableOpacity>
+        <Text style={styles.photoNote}>
+          Foto: 4€ (6-12 persone) • 8€ (12+ persone)
+        </Text>
 
         {renderSummary()}
 
@@ -398,6 +403,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.secondary,
+  },
+  photoNote: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: -12,
+    marginBottom: 20,
   },
   summaryCard: {
     backgroundColor: colors.card,

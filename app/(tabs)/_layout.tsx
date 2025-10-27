@@ -5,8 +5,11 @@ import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { colors } from '@/styles/commonStyles';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TabLayout() {
+  const { isAdmin } = useAuth();
+  
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
@@ -17,10 +20,20 @@ export default function TabLayout() {
     {
       name: 'profile',
       route: '/(tabs)/profile',
-      icon: 'person.fill',
-      label: 'Profilo',
+      icon: 'info.circle.fill',
+      label: 'Info Due Mondi',
     },
   ];
+
+  // Add admin tab if user is admin
+  if (isAdmin) {
+    tabs.push({
+      name: 'admin',
+      route: '/(tabs)/admin',
+      icon: 'person.2.fill',
+      label: 'Admin',
+    });
+  }
 
   if (Platform.OS === 'ios') {
     return (
@@ -30,9 +43,15 @@ export default function TabLayout() {
           <Label>Home</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="profile">
-          <Icon sf="person.fill" drawable="ic_profile" />
-          <Label>Profilo</Label>
+          <Icon sf="info.circle.fill" drawable="ic_info" />
+          <Label>Info Due Mondi</Label>
         </NativeTabs.Trigger>
+        {isAdmin && (
+          <NativeTabs.Trigger name="admin">
+            <Icon sf="person.2.fill" drawable="ic_admin" />
+            <Label>Admin</Label>
+          </NativeTabs.Trigger>
+        )}
       </NativeTabs>
     );
   }
@@ -47,6 +66,7 @@ export default function TabLayout() {
       >
         <Stack.Screen name="(home)" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="admin" />
       </Stack>
       <FloatingTabBar tabs={tabs} />
     </>

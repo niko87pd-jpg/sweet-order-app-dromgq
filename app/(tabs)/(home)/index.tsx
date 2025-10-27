@@ -1,14 +1,30 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Platform, Image, Linking, ActivityIndicator } from 'react-native';
+import { Stack, useRouter, Redirect } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { TouchableOpacity } from 'react-native';
 import { PASTRY_INFO, UI_TEXTS } from '@/config/appConfig';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, loading, isSupabaseEnabled } = useAuth();
+
+  // Redirect to auth if Supabase is enabled and user is not logged in
+  if (isSupabaseEnabled && !loading && !user) {
+    return <Redirect href="/auth" />;
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Caricamento...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -132,6 +148,17 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

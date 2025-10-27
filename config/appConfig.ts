@@ -53,16 +53,17 @@ export const CAKE_PRICING = {
   gramsPerPerson: 140,
   
   // Numero minimo di persone
-  minPeople: 1,
+  minPeople: 6,
   
   // Numero massimo di persone
   maxPeople: 50,
   
   // Numero predefinito di persone
-  defaultPeople: 4,
+  defaultPeople: 6,
   
-  // Sovraprezzo per foto sul dolce (€)
-  photoSurcharge: 8,
+  // Sovraprezzo per foto sul dolce (€) - 4€ per 6-12 persone, 8€ per 12+ persone
+  photoSurcharge: 4, // Base price for 6-12 people
+  photoSurchargeOver12: 8, // Price for 12+ people
   
   // Sovraprezzo per due creme diverse (€)
   differentCreamsSurcharge: 3,
