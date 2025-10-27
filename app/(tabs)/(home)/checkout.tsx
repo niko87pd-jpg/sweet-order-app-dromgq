@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Linking, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Linking, TextInput, Modal } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as MailComposer from 'expo-mail-composer';
@@ -35,51 +35,87 @@ export default function CheckoutScreen() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [tempDate, setTempDate] = useState(pickupDate || new Date());
+  const [tempDate, setTempDate] = useState(pickupDate || (() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 0, 0, 0);
+    return tomorrow;
+  })());
   const [tempTime, setTempTime] = useState(() => {
+    if (pickupTime) {
+      const [hours, minutes] = pickupTime.split(':').map(Number);
+      const time = new Date();
+      time.setHours(hours, minutes, 0, 0);
+      return time;
+    }
     const now = new Date();
-    now.setHours(now.getHours() + 25); // Default to 25 hours from now
+    now.setHours(now.getHours() + 25, 0, 0, 0);
     return now;
   });
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
+    console.log('Date change event:', event.type, selectedDate);
+    
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
-    }
-    
-    if (event.type === 'dismissed') {
-      setShowDatePicker(false);
-      return;
-    }
-    
-    if (selectedDate) {
-      setTempDate(selectedDate);
-      setPickupDate(selectedDate);
-      if (Platform.OS === 'android') {
-        setShowDatePicker(false);
+      if (event.type === 'set' && selectedDate) {
+        setTempDate(selectedDate);
+        setPickupDate(selectedDate);
+      }
+    } else {
+      // iOS - update temp date immediately
+      if (selectedDate) {
+        setTempDate(selectedDate);
       }
     }
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
+    console.log('Time change event:', event.type, selectedTime);
+    
     if (Platform.OS === 'android') {
       setShowTimePicker(false);
-    }
-    
-    if (event.type === 'dismissed') {
-      setShowTimePicker(false);
-      return;
-    }
-    
-    if (selectedTime) {
-      setTempTime(selectedTime);
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      setPickupTime(`${hours}:${minutes}`);
-      if (Platform.OS === 'android') {
-        setShowTimePicker(false);
+      if (event.type === 'set' && selectedTime) {
+        setTempTime(selectedTime);
+        const hours = selectedTime.getHours().toString().padStart(2, '0');
+        const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+        setPickupTime(`${hours}:${minutes}`);
+      }
+    } else {
+      // iOS - update temp time immediately
+      if (selectedTime) {
+        setTempTime(selectedTime);
       }
     }
+  };
+
+  const confirmDateSelection = () => {
+    setPickupDate(tempDate);
+    setShowDatePicker(false);
+    console.log('Date confirmed:', tempDate);
+  };
+
+  const confirmTimeSelection = () => {
+    const hours = tempTime.getHours().toString().padStart(2, '0');
+    const minutes = tempTime.getMinutes().toString().padStart(2, '0');
+    setPickupTime(`${hours}:${minutes}`);
+    setShowTimePicker(false);
+    console.log('Time confirmed:', `${hours}:${minutes}`);
+  };
+
+  const cancelDateSelection = () => {
+    setTempDate(pickupDate || new Date());
+    setShowDatePicker(false);
+  };
+
+  const cancelTimeSelection = () => {
+    if (pickupTime) {
+      const [hours, minutes] = pickupTime.split(':').map(Number);
+      const time = new Date();
+      time.setHours(hours, minutes, 0, 0);
+      setTempTime(time);
+    }
+    setShowTimePicker(false);
   };
 
   const isValidPickupDateTime = (): boolean => {
@@ -535,26 +571,92 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={tempDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
-            onChange={handleDateChange}
-            minimumDate={new Date()}
-            locale="it-IT"
-          />
-        )}
+        {Platform.OS === 'ios' ? (
+          <>
+            <Modal
+              visible={showDatePicker}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={cancelDateSelection}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity onPress={cancelDateSelection}>
+                      <Text style={styles.modalCancelButton}>Annulla</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Seleziona Data</Text>
+                    <TouchableOpacity onPress={confirmDateSelection}>
+                      <Text style={styles.modalConfirmButton}>Conferma</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDateChange}
+                    minimumDate={new Date()}
+                    locale="it-IT"
+                    textColor={colors.text}
+                  />
+                </View>
+              </View>
+            </Modal>
 
-        {showTimePicker && (
-          <DateTimePicker
-            value={tempTime}
-            mode="time"
-            display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
-            onChange={handleTimeChange}
-            locale="it-IT"
-            is24Hour={true}
-          />
+            <Modal
+              visible={showTimePicker}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={cancelTimeSelection}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity onPress={cancelTimeSelection}>
+                      <Text style={styles.modalCancelButton}>Annulla</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Seleziona Orario</Text>
+                    <TouchableOpacity onPress={confirmTimeSelection}>
+                      <Text style={styles.modalConfirmButton}>Conferma</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={handleTimeChange}
+                    locale="it-IT"
+                    is24Hour={true}
+                    textColor={colors.text}
+                  />
+                </View>
+              </View>
+            </Modal>
+          </>
+        ) : (
+          <>
+            {showDatePicker && (
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="calendar"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+                locale="it-IT"
+              />
+            )}
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={tempTime}
+                mode="time"
+                display="clock"
+                onChange={handleTimeChange}
+                locale="it-IT"
+                is24Hour={true}
+              />
+            )}
+          </>
         )}
 
         <View style={styles.mapCard}>
@@ -812,6 +914,40 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '700',
     textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.highlight,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  modalCancelButton: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  modalConfirmButton: {
+    fontSize: 16,
+    color: colors.primary,
+    fontWeight: '700',
   },
   mapCard: {
     backgroundColor: colors.card,
