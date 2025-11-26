@@ -11,7 +11,7 @@ type TabType = 'customers' | 'pending' | 'completed';
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { isAdmin, isSupabaseEnabled } = useAuth();
+  const { isAdmin, user, isSupabaseEnabled } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('customers');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
@@ -19,10 +19,19 @@ export default function AdminScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      Alert.alert(
+        'Accesso Negato',
+        'Devi effettuare il login per accedere al pannello admin.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+      return;
+    }
+
     if (!isSupabaseEnabled) {
       Alert.alert(
         'Supabase Non Configurato',
-        'Per utilizzare il pannello admin, devi prima configurare Supabase. Premi il pulsante Supabase e connettiti a un progetto.',
+        'Per utilizzare il pannello admin, devi prima configurare Supabase.',
         [{ text: 'OK', onPress: () => router.back() }]
       );
       return;
@@ -38,7 +47,7 @@ export default function AdminScreen() {
     }
 
     loadData();
-  }, [isAdmin, isSupabaseEnabled]);
+  }, [isAdmin, user, isSupabaseEnabled]);
 
   const loadData = async () => {
     setLoading(true);

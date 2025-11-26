@@ -35,6 +35,9 @@ export default function CheckoutScreen() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [tempDate, setTempDate] = useState(pickupDate || (() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -134,11 +137,15 @@ export default function CheckoutScreen() {
   const sendOrderEmail = async () => {
     try {
       // Build email body
-      let emailBody = `Nuovo Ordine da ${customer?.first_name || 'Cliente'} ${customer?.last_name || ''}\n\n`;
+      const displayName = customer ? `${customer.first_name} ${customer.last_name}` : customerName || 'Cliente';
+      const displayEmail = customer ? customer.email : customerEmail || 'N/A';
+      const displayPhone = customer ? customer.phone : customerPhone || 'N/A';
+
+      let emailBody = `Nuovo Ordine da ${displayName}\n\n`;
       emailBody += `=== DETTAGLI CLIENTE ===\n`;
-      emailBody += `Nome: ${customer?.first_name || 'N/A'} ${customer?.last_name || ''}\n`;
-      emailBody += `Email: ${customer?.email || 'N/A'}\n`;
-      emailBody += `Telefono: ${customer?.phone || 'N/A'}\n\n`;
+      emailBody += `Nome: ${displayName}\n`;
+      emailBody += `Email: ${displayEmail}\n`;
+      emailBody += `Telefono: ${displayPhone}\n\n`;
       
       emailBody += `=== DETTAGLI ORDINE ===\n`;
       
@@ -200,7 +207,7 @@ export default function CheckoutScreen() {
       if (isAvailable) {
         await MailComposer.composeAsync({
           recipients: [PASTRY_INFO.email],
-          subject: `Nuovo Ordine - ${customer?.first_name || 'Cliente'} ${customer?.last_name || ''}`,
+          subject: `Nuovo Ordine - ${displayName}`,
           body: emailBody,
         });
       } else {
@@ -236,6 +243,28 @@ export default function CheckoutScreen() {
       return;
     }
 
+    // Validate customer info if not logged in
+    if (!customer) {
+      if (!customerName || !customerEmail || !customerPhone) {
+        Alert.alert('Errore', 'Inserisci i tuoi dati di contatto per completare l\'ordine');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(customerEmail)) {
+        Alert.alert('Errore', 'Inserisci un indirizzo email valido');
+        return;
+      }
+
+      // Basic phone validation
+      const phoneDigits = customerPhone.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        Alert.alert('Errore', 'Inserisci un numero di telefono valido (almeno 10 cifre)');
+        return;
+      }
+    }
+
     console.log('Processing payment with method:', selectedPaymentMethod);
     console.log('Order total:', getOrderTotal());
     console.log('Deposit amount:', getDepositAmount());
@@ -243,7 +272,7 @@ export default function CheckoutScreen() {
     console.log('Pickup time:', pickupTime);
     console.log('Order notes:', orderNotes);
 
-    // Save order to database if Supabase is enabled
+    // Save order to database if Supabase is enabled and customer is logged in
     if (isSupabaseEnabled && customer) {
       try {
         console.log('Saving order to database...');
@@ -364,6 +393,53 @@ export default function CheckoutScreen() {
           Platform.OS !== 'ios' && styles.contentContainerWithTabBar
         ]}
       >
+        {!customer && (
+          <View style={styles.customerInfoCard}>
+            <Text style={styles.customerInfoTitle}>I Tuoi Dati</Text>
+            <Text style={styles.customerInfoSubtitle}>
+              Inserisci i tuoi dati per ricevere conferma dell&apos;ordine
+            </Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nome e Cognome *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Mario Rossi"
+                placeholderTextColor={colors.textSecondary}
+                value={customerName}
+                onChangeText={setCustomerName}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="mario.rossi@email.com"
+                placeholderTextColor={colors.textSecondary}
+                value={customerEmail}
+                onChangeText={setCustomerEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Telefono *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="3471234567"
+                placeholderTextColor={colors.textSecondary}
+                value={customerPhone}
+                onChangeText={setCustomerPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+        )}
+
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>{UI_TEXTS.checkout.orderSummary}</Text>
 
@@ -718,10 +794,10 @@ export default function CheckoutScreen() {
         <TouchableOpacity
           style={[
             styles.confirmButton, 
-            (!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime()) && styles.confirmButtonDisabled
+            (!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime() || (!customer && (!customerName || !customerEmail || !customerPhone))) && styles.confirmButtonDisabled
           ]}
           onPress={handlePayment}
-          disabled={!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime()}
+          disabled={!selectedPaymentMethod || !pickupDate || !pickupTime || !isValidPickupDateTime() || (!customer && (!customerName || !customerEmail || !customerPhone))}
         >
           <IconSymbol name="creditcard" size={24} color="#FFFFFF" />
           <Text style={styles.confirmButtonText}>{UI_TEXTS.checkout.confirmButton}</Text>
@@ -742,6 +818,43 @@ const styles = StyleSheet.create({
   },
   contentContainerWithTabBar: {
     paddingBottom: 120,
+  },
+  customerInfoCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
+  },
+  customerInfoTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  customerInfoSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 20,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text,
+    borderWidth: 2,
+    borderColor: colors.highlight,
   },
   summaryCard: {
     backgroundColor: colors.card,

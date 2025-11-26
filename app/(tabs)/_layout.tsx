@@ -8,7 +8,7 @@ import { colors } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TabLayout() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   
   const tabs: TabBarItem[] = [
     {
@@ -25,8 +25,8 @@ export default function TabLayout() {
     },
   ];
 
-  // Add admin tab if user is admin
-  if (isAdmin) {
+  // Add admin tab only if user is logged in and is admin
+  if (user && isAdmin) {
     tabs.push({
       name: 'admin',
       route: '/(tabs)/admin',
@@ -46,7 +46,7 @@ export default function TabLayout() {
           <Icon sf="info.circle.fill" drawable="ic_info" />
           <Label>Info Due Mondi</Label>
         </NativeTabs.Trigger>
-        {isAdmin && (
+        {user && isAdmin && (
           <NativeTabs.Trigger name="admin">
             <Icon sf="person.2.fill" drawable="ic_admin" />
             <Label>Admin</Label>
