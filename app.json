@@ -4,11 +4,11 @@
     "slug": "pasticceria-due-mondi",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/logo-due-mondi-sistemato-per-bambu prova.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/logo-due-mondi-sistemato-per-bambu.png",
+      "image": "./assets/images/logo-due-mondi-sistemato-per-bambu prova.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo-due-mondi-sistemato-per-bambu.png",
+        "foregroundImage": "./assets/images/logo-due-mondi-sistemato-per-bambu prova.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
