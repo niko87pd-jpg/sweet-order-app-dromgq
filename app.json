@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Sweet Order",
-    "slug": "sweet-order",
+    "name": "Pasticceria Due Mondi",
+    "slug": "pasticceria-due-mondi",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo-due-mondi-sistemato-per-bambu.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -36,7 +36,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "sweetorder",
+    "scheme": "pasticceriaduemondi",
     "experiments": {
       "typedRoutes": true
     },
